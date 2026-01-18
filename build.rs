@@ -6,7 +6,7 @@ fn main() {
     let mcrl2_path = String::from("3rd-party/mCRL2/");
     let mcrl2_workarounds_path = String::from("3rd-party/mCRL2-workarounds/");
 
-    #[cfg(feature = "mcrl2_cpptrace")]
+    #[cfg(feature = "cpptrace")]
     {
         // The debug flags must be set on all the standard libraries used.
         let mut debug_build = Build::new();
@@ -14,7 +14,7 @@ fn main() {
         add_compile_flags(&mut debug_build, mcrl2_workarounds_path.clone());
 
         // Use the `cmake` crate to build cpptrace.
-        let mut dst = cmake::Config::new("../../../../3rd-party/cpptrace")
+        let mut dst = cmake::Config::new("3rd-party/cpptrace")
             .define("BUILD_SHARED_LIBS", "OFF") // Build a static library.
             .define("CPPTRACE_USE_EXTERNAL_LIBDWARF", "OFF") // Compile libdwarf as part of cpptrace.
             .init_cxx_cfg(debug_build)
@@ -176,16 +176,16 @@ fn main() {
         .file("cpp/pbes.cpp")
         .file(mcrl2_workarounds_path.clone() + "mcrl2_syntax.c"); // This is to avoid generating the dparser grammer.
 
-    #[cfg(feature = "mcrl2_jittyc")]
+    #[cfg(feature = "jittyc")]
     build.files(add_prefix(
         mcrl2_path.clone() + "libraries/data/source/",
         &["detail/rewrite/jittyc.cpp"],
     ));
 
-    #[cfg(feature = "mcrl2_jittyc")]
+    #[cfg(feature = "jittyc")]
     build.define("MCRL2_ENABLE_JITTYC", "1");
 
-    #[cfg(feature = "mcrl2_cpptrace")]
+    #[cfg(feature = "cpptrace")]
     build.define("MCRL2_ENABLE_CPPTRACE", "1");
 
     // Enable thread safety since Rust executes its tests at least by default, and allow threading in general.
