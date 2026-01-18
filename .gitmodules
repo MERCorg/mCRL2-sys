@@ -1,0 +1,9 @@
+[submodule "3rd-party/boost-include-only"]
+	path = 3rd-party/boost-include-only
+	url = https://github.com/MERCorg/boost-include-only
+[submodule "3rd-party/cpptrace"]
+	path = 3rd-party/cpptrace
+	url = https://github.com/jeremy-rifkin/cpptrace/
+[submodule "3rd-party/mCRL2"]
+	path = 3rd-party/mCRL2
+	url = https://github.com/mCRL2org/mCRL2
