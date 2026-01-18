@@ -1,0 +1,23 @@
+[package]
+name = "mcrl2-sys"
+links = "mcrl2"
+edition = "2024"
+license = "BSL-1.0"
+rust-version = "1.85"
+version = "1.0.0"
+
+[dependencies]
+cxx = "1.0"
+
+[build-dependencies]
+cxx-build = "1.0"
+cc = "1.0"
+cmake = { version = "0.1", optional = true }
+cargo-emit = "0.2"
+
+[features]
+# Enables the compiling cpptrace option for mCRL2, this gives proper backtraces on exceptions.
+mcrl2_cpptrace = ["dep:cmake"]
+
+# Enables the compiling rewriter option for mCRL2.
+mcrl2_jittyc = []
