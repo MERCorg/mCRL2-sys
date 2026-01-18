@@ -12,7 +12,7 @@ pub mod ffi {
         #[namespace = "mcrl2::data::detail"]
         type RewriterJitty;
 
-        #[cfg(feature = "mcrl2_jittyc")]
+        #[cfg(feature = "jittyc")]
         #[namespace = "mcrl2::data::detail"]
         type RewriterCompilingJitty;
 
@@ -20,7 +20,7 @@ pub mod ffi {
         fn mcrl2_create_rewriter_jitty(data_spec: &data_specification) -> UniquePtr<RewriterJitty>;
 
         /// Creates a compiling rewriter from the given data specification.
-        #[cfg(feature = "mcrl2_jittyc")]
+        #[cfg(feature = "jittyc")]
         fn mcrl2_create_rewriter_jittyc(data_spec: &data_specification) -> UniquePtr<RewriterCompilingJitty>;
 
         #[namespace = "atermpp::detail"]
