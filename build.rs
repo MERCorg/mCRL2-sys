@@ -174,6 +174,7 @@ fn main() {
             &utilities_source_files,
         ))
         .file("cpp/pbes.cpp")
+        .file("cpp/data.cpp")
         .file(mcrl2_workarounds_path.clone() + "mcrl2_syntax.c"); // This is to avoid generating the dparser grammer.
 
     #[cfg(feature = "jittyc")]
@@ -204,6 +205,7 @@ fn main() {
     rerun_if_changed!("cpp/atermpp.h");
     rerun_if_changed!("cpp/exception.h");
     rerun_if_changed!("cpp/data.h");
+    rerun_if_changed!("cpp/data.cpp");
     rerun_if_changed!("cpp/pbes.h");
     rerun_if_changed!("cpp/pbes.cpp");
     rerun_if_changed!("cpp/log.h");

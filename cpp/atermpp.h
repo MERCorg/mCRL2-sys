@@ -149,6 +149,13 @@ inline const detail::_aterm* mcrl2_aterm_create(const detail::_function_symbol& 
   return 0;
 }
 
+inline const detail::_aterm* mcrl2_aterm_create_int(std::uint64_t value)
+{
+  atermpp::unprotected_aterm_core result(nullptr);
+  make_aterm_int(reinterpret_cast<aterm_int&>(result), static_cast<std::size_t>(value));
+  return detail::address(result);
+}
+
 inline std::unique_ptr<aterm> mcrl2_aterm_from_string(rust::Str text)
 {
   return std::make_unique<aterm>(read_term_from_string(static_cast<std::string>(text)));

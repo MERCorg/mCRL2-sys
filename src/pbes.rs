@@ -29,6 +29,12 @@ pub mod ffi {
         /// Loads a PBES from a string.
         fn mcrl2_load_pbes_from_text(input: &str) -> Result<UniquePtr<pbes>>;
 
+        /// Normalizes a PBES.
+        fn mcrl2_pbes_normalize(input: Pin<&mut pbes>);
+
+        /// Checks whether the PBES is well-typed.
+        fn mcrl2_pbes_is_well_typed(input: &pbes) -> bool;
+
         #[namespace = "mcrl2::data"]
         type data_specification = crate::data::ffi::data_specification;
 
@@ -68,6 +74,8 @@ pub mod ffi {
         fn mcrl2_stategraph_equation_predicate_variables(
             input: &stategraph_equation,
         ) -> UniquePtr<CxxVector<predicate_variable>>;
+
+        fn mcrl2_pbes_is_propositional_variable(expression: &_aterm) -> bool;
 
         /// Returns the propositional variable of a pbes equation
         fn mcrl2_stategraph_equation_variable(equation: &stategraph_equation) -> *const _aterm;
@@ -133,9 +141,6 @@ pub mod ffi {
         /// Returns the equations of the given srf_pbes.
         fn mcrl2_srf_pbes_equations(result: Pin<&mut CxxVector<srf_equation>>, input: &srf_pbes);
 
-        /// Returns the variable of the given srf_equation.
-        fn mcrl2_pbes_is_propositional_variable(input: &_aterm) -> bool;
-
         fn mcrl2_srf_summand_condition(summand: &srf_summand) -> *const _aterm;
 
         fn mcrl2_srf_summand_variable(summand: &srf_summand) -> *const _aterm;
@@ -154,6 +159,15 @@ pub mod ffi {
             pi: &Vec<usize>,
         ) -> UniquePtr<aterm>;
 
-        fn mcrl2_pbes_expression_to_string(expression: &aterm) -> String;
+        fn mcrl2_pbes_expression_to_string(expression: &_aterm) -> String;
+
+        fn mcrl2_pbes_is_pbes_expression(expression: &_aterm) -> bool;
+        fn mcrl2_pbes_is_propositional_variable_instantiation(expression: &_aterm) -> bool;
+        fn mcrl2_pbes_is_not(term: &_aterm) -> bool;
+        fn mcrl2_pbes_is_and(term: &_aterm) -> bool;
+        fn mcrl2_pbes_is_or(term: &_aterm) -> bool;
+        fn mcrl2_pbes_is_imp(term: &_aterm) -> bool;
+        fn mcrl2_pbes_is_forall(term: &_aterm) -> bool;
+        fn mcrl2_pbes_is_exists(term: &_aterm) -> bool;
     }
 }

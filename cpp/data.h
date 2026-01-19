@@ -23,6 +23,10 @@
 
 namespace mcrl2::data
 {
+
+// Forward declaration
+struct assignment_pair;
+
 inline
 std::unique_ptr<data_specification> mcrl2_data_specification_from_string(rust::Str input)
 {
@@ -45,60 +49,73 @@ std::unique_ptr<detail::RewriterCompilingJitty> mcrl2_create_rewriter_jittyc(con
 
 #endif
 
+std::unique_ptr<atermpp::aterm> mcrl2_data_expression_replace_variables(const atermpp::detail::_aterm& term,
+    const rust::Vec<assignment_pair>& sigma);
+
+inline
 bool mcrl2_data_expression_is_variable(const atermpp::detail::_aterm& input)
 {
   atermpp::unprotected_aterm_core tmp(&input);
   return data::is_variable(atermpp::down_cast<atermpp::aterm>(tmp));
 }
 
+inline
 bool mcrl2_data_expression_is_application(const atermpp::detail::_aterm& input)
 {
   atermpp::unprotected_aterm_core tmp(&input);
   return data::is_application(atermpp::down_cast<atermpp::aterm>(tmp));
 }
 
+inline
 bool mcrl2_data_expression_is_abstraction(const atermpp::detail::_aterm& input)
 {
   atermpp::unprotected_aterm_core tmp(&input);
   return data::is_abstraction(atermpp::down_cast<atermpp::aterm>(tmp));
 }
 
+inline
 bool mcrl2_data_expression_is_function_symbol(const atermpp::detail::_aterm& input)
 {
   atermpp::unprotected_aterm_core tmp(&input);
   return data::is_function_symbol(atermpp::down_cast<atermpp::aterm>(tmp));
 }
 
+inline
 bool mcrl2_data_expression_is_where_clause(const atermpp::detail::_aterm& input)
 {
   atermpp::unprotected_aterm_core tmp(&input);
   return data::is_where_clause(atermpp::down_cast<atermpp::aterm>(tmp));
 }
 
+inline
 bool mcrl2_data_expression_is_machine_number(const atermpp::detail::_aterm& input)
 {
   atermpp::unprotected_aterm_core tmp(&input);
   return data::is_machine_number(atermpp::down_cast<atermpp::aterm>(tmp));
 }
 
+inline
 bool mcrl2_data_expression_is_untyped_identifier(const atermpp::detail::_aterm& input)
 {
   atermpp::unprotected_aterm_core tmp(&input);
   return data::is_untyped_identifier(atermpp::down_cast<atermpp::aterm>(tmp));
 }
 
+inline
 bool mcrl2_data_expression_is_data_expression(const atermpp::detail::_aterm& input)
 {
   atermpp::unprotected_aterm_core tmp(&input);
   return data::is_data_expression(atermpp::down_cast<atermpp::aterm>(tmp));
 }
 
+inline
 bool mcrl2_is_data_sort_expression(const atermpp::detail::_aterm& input)
 {
   atermpp::unprotected_aterm_core tmp(&input);
   return data::is_sort_expression(atermpp::down_cast<atermpp::aterm>(tmp));
 }
 
+inline
 rust::String mcrl2_data_expression_to_string(const atermpp::detail::_aterm& input)
 {
   atermpp::unprotected_aterm_core tmp(&input);

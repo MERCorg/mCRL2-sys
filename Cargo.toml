@@ -5,6 +5,7 @@ edition = "2024"
 license = "BSL-1.0"
 rust-version = "1.85"
 version = "1.0.0"
+readme = "README.md"
 
 [dependencies]
 cxx = "1.0"
