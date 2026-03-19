@@ -95,6 +95,11 @@ pub mod ffi {
         /// Returns the copy variable set of a predicate variable.
         fn mcrl2_predicate_variable_copy(input: &predicate_variable) -> Vec<usize>;
 
+        /// Returns the propositional variable instantiation of a predicate variable.
+        fn mcrl2_predicate_variable_propositional_variable_instantiation(
+            input: &predicate_variable,
+        ) -> *const _aterm;
+
         #[namespace = "mcrl2::pbes_system::detail"]
         type local_control_flow_graph_vertex;
 

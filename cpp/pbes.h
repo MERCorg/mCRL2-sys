@@ -17,6 +17,7 @@
 #include "rust/cxx.h"
 
 #include <cstddef>
+#include <mcrl2/atermpp/detail/aterm_core.h>
 #include <memory>
 #include <string>
 #include <vector>
@@ -293,6 +294,12 @@ rust::Vec<std::size_t> mcrl2_predicate_variable_copy(const detail::predicate_var
     result.push_back(entry.first);
   }
   return result;
+}
+
+inline
+const atermpp::detail::_aterm* mcrl2_predicate_variable_propositional_variable_instantiation(const detail::predicate_variable& v)
+{
+  return atermpp::detail::address(v.variable());
 }
 
 // mcrl2::pbes_system::srf_pbes
