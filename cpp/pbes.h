@@ -262,6 +262,39 @@ rust::Vec<std::size_t> mcrl2_predicate_variable_changed(const detail::predicate_
   return result;
 }
 
+inline
+rust::Vec<std::size_t> mcrl2_predicate_variable_source(const detail::predicate_variable& v)
+{
+  rust::Vec<std::size_t> result;
+  for (const auto& entry : v.source())
+  {
+    result.push_back(entry.first);
+  }
+  return result;
+}
+
+inline
+rust::Vec<std::size_t> mcrl2_predicate_variable_target(const detail::predicate_variable& v)
+{
+  rust::Vec<std::size_t> result;
+  for (const auto& entry : v.target())
+  {
+    result.push_back(entry.first);
+  }
+  return result;
+}
+
+inline
+rust::Vec<std::size_t> mcrl2_predicate_variable_copy(const detail::predicate_variable& v)
+{
+  rust::Vec<std::size_t> result;
+  for (const auto& entry : v.copy())
+  {
+    result.push_back(entry.first);
+  }
+  return result;
+}
+
 // mcrl2::pbes_system::srf_pbes
 
 inline

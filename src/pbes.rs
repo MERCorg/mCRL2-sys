@@ -86,6 +86,15 @@ pub mod ffi {
         /// Returns the changed set of a predicate variable.
         fn mcrl2_predicate_variable_changed(input: &predicate_variable) -> Vec<usize>;
 
+        /// Returns the soucre variable set of a predicate variable.
+        fn mcrl2_predicate_variable_source(input: &predicate_variable) -> Vec<usize>;
+
+        /// Returns the target variable set of a predicate variable.
+        fn mcrl2_predicate_variable_target(input: &predicate_variable) -> Vec<usize>;
+
+        /// Returns the copy variable set of a predicate variable.
+        fn mcrl2_predicate_variable_copy(input: &predicate_variable) -> Vec<usize>;
+
         #[namespace = "mcrl2::pbes_system::detail"]
         type local_control_flow_graph_vertex;
 
