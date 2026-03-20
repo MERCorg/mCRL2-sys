@@ -46,6 +46,12 @@ pub mod ffi {
         fn mcrl2_data_expression_is_variable(input: &_aterm) -> bool;
         fn mcrl2_data_expression_is_application(input: &_aterm) -> bool;
         fn mcrl2_data_expression_is_abstraction(input: &_aterm) -> bool;
+        fn mcrl2_data_expression_is_binder_exists(input: &_aterm) -> bool;
+        fn mcrl2_data_expression_is_binder_forall(input: &_aterm) -> bool;
+        fn mcrl2_data_expression_is_binder_lambda(input: &_aterm) -> bool;
+        fn mcrl2_data_expression_is_binder_set_comp(input: &_aterm) -> bool;
+        fn mcrl2_data_expression_is_binder_bag_comp(input: &_aterm) -> bool;
+        fn mcrl2_data_expression_is_binder_untyped_set_bag_comp(input: &_aterm) -> bool;
         fn mcrl2_data_expression_is_function_symbol(input: &_aterm) -> bool;
         fn mcrl2_data_expression_is_where_clause(input: &_aterm) -> bool;
         fn mcrl2_data_expression_is_machine_number(input: &_aterm) -> bool;

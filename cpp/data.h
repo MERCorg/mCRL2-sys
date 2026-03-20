@@ -74,6 +74,48 @@ bool mcrl2_data_expression_is_abstraction(const atermpp::detail::_aterm& input)
 }
 
 inline
+bool mcrl2_data_expression_is_binder_exists(const atermpp::detail::_aterm& input)
+{
+  atermpp::unprotected_aterm_core tmp(&input);
+  return data::is_exists_binder(atermpp::down_cast<atermpp::aterm>(tmp));
+}
+
+inline
+bool mcrl2_data_expression_is_binder_forall(const atermpp::detail::_aterm& input)
+{
+  atermpp::unprotected_aterm_core tmp(&input);
+  return data::is_forall_binder(atermpp::down_cast<atermpp::aterm>(tmp));
+}
+
+inline
+bool mcrl2_data_expression_is_binder_lambda(const atermpp::detail::_aterm& input)
+{
+  atermpp::unprotected_aterm_core tmp(&input);
+  return data::is_lambda_binder(atermpp::down_cast<atermpp::aterm>(tmp));
+}
+
+inline
+bool mcrl2_data_expression_is_binder_set_comp(const atermpp::detail::_aterm& input)
+{
+  atermpp::unprotected_aterm_core tmp(&input);
+  return data::is_set_comprehension_binder(atermpp::down_cast<atermpp::aterm>(tmp));
+}
+
+inline
+bool mcrl2_data_expression_is_binder_bag_comp(const atermpp::detail::_aterm& input)
+{
+  atermpp::unprotected_aterm_core tmp(&input);
+  return data::is_bag_comprehension_binder(atermpp::down_cast<atermpp::aterm>(tmp));
+}
+
+inline
+bool mcrl2_data_expression_is_binder_untyped_set_bag_comp(const atermpp::detail::_aterm& input)
+{
+  atermpp::unprotected_aterm_core tmp(&input);
+  return data::is_untyped_set_or_bag_comprehension_binder(atermpp::down_cast<atermpp::aterm>(tmp));
+}
+
+inline
 bool mcrl2_data_expression_is_function_symbol(const atermpp::detail::_aterm& input)
 {
   atermpp::unprotected_aterm_core tmp(&input);

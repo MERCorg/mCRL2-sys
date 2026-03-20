@@ -3,7 +3,7 @@ name = "mcrl2-sys"
 links = "mcrl2"
 edition = "2024"
 license = "BSL-1.0"
-rust-version = "1.85"
+rust-version = "1.87"
 version = "1.0.0"
 readme = "README.md"
 
