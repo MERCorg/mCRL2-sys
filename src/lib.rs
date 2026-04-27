@@ -14,6 +14,7 @@
 pub mod atermpp;
 pub mod data;
 pub mod log;
+pub mod lps;
 pub mod pbes;
 
 // Reexport the cxx types that we use
