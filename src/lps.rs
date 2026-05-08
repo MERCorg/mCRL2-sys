@@ -26,5 +26,15 @@ pub mod ffi {
         fn mcrl2_lps_process_initializer(lps: &stochastic_specification) -> Result<UniquePtr<stochastic_process_initializer>>;
 
         fn mcrl2_lps_action_summand_condition(summand: &stochastic_action_summand) -> *const _aterm;
+
+        fn mcrl2_lps_action_summand_multi_action(summand: &stochastic_action_summand) -> *const _aterm;
+
+        fn mcrl2_lps_action_summand_summation_variables(summand: &stochastic_action_summand) -> *const _aterm;
+
+        fn mcrl2_lps_action_summand_assignments(summand: &stochastic_action_summand) -> *const _aterm;
+
+        fn mcrl2_lps_process_parameters(lps: &stochastic_specification) -> *const _aterm;
+
+        fn mcrl2_lps_process_initializer_expressions(init: &stochastic_process_initializer) -> *const _aterm;
     }
 }
