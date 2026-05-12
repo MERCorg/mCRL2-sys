@@ -100,6 +100,8 @@ struct learn_successors_context {
   data::mutable_indexed_substitution<> sigma;
   data::enumerator_identifier_generator id_generator;
   data::enumerator_algorithm<> enumerator;
+  // Temporary vector used for the returned values.
+  std::vector<const atermpp::detail::_aterm *> values;
 
   learn_successors_context(const data::data_specification &dataspec)
       : rewr(dataspec, data::used_data_equation_selector(dataspec)),
@@ -133,6 +135,7 @@ inline void mcrl2_lps_enumerate(
   auto &sigma = context.sigma;
   auto &rewr = context.rewr;
   auto &enumerator = context.enumerator;
+  auto &values = context.values;
 
   // Interpret the summation variables as a variable_list.
   atermpp::unprotected_aterm_core tmp_vars(&summation_variables);
@@ -156,16 +159,15 @@ inline void mcrl2_lps_enumerate(
   data::data_expression rewritten_condition =
       rewr(atermpp::down_cast<data::data_expression>(cond_term), sigma);
 
-  // Temporary vector used for the returned values.
-  std::vector<const atermpp::detail::_aterm *> values;
-
   if (!data::is_false(rewritten_condition)) {
     enumerator.enumerate(
         enumerator_element(variables, rewritten_condition), sigma,
         [&](const enumerator_element &p) {
           p.add_assignments(variables, sigma, rewr);
 
-          // Rewrite the right-hand sides of the assignments and add them to the returned values.
+          // Rewrite the right-hand sides of the assignments and add them to the
+          // returned values.
+          values.clear();
           for (const auto &assignment : assignment_list) {
             data::data_expression value = rewr(assignment.rhs(), sigma);
             values.push_back(atermpp::detail::address(value));
