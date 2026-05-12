@@ -10,6 +10,8 @@ pub mod ffi {
 
         type stochastic_process_initializer;
 
+        type learn_successors_context;
+
         #[namespace = "atermpp::detail"]
         type _aterm = crate::atermpp::ffi::_aterm;
 
@@ -36,5 +38,21 @@ pub mod ffi {
         fn mcrl2_lps_process_parameters(lps: &stochastic_specification) -> *const _aterm;
 
         fn mcrl2_lps_process_initializer_expressions(init: &stochastic_process_initializer) -> *const _aterm;
+
+        /// Creates a learn_successors_context containing a rewriter, substitution, and enumerator.
+        fn mcrl2_lps_create_learn_successors_context(spec: &stochastic_specification) -> UniquePtr<learn_successors_context>;
+
+        /// Enumerate all solutions for the summand's condition under the given read parameter assignments.
+        /// Calls the callback with the context pointer and a slice of next-state values for each solution.
+        unsafe fn mcrl2_lps_enumerate(
+            context: Pin<&mut learn_successors_context>,
+            condition: &_aterm,
+            summation_variables: &_aterm,
+            assignments: &_aterm,
+            read_parameters: &[*const _aterm],
+            read_values: &[*const _aterm],
+            callback_context: *mut u8,
+            callback: unsafe fn(*mut u8, &[*const _aterm]),
+        );
     }
 }
