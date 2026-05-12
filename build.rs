@@ -203,12 +203,13 @@ fn main() {
     // These files should trigger a rebuild.
     rerun_if_changed!("cpp/assert.h");
     rerun_if_changed!("cpp/atermpp.h");
-    rerun_if_changed!("cpp/exception.h");
-    rerun_if_changed!("cpp/data.h");
     rerun_if_changed!("cpp/data.cpp");
-    rerun_if_changed!("cpp/pbes.h");
-    rerun_if_changed!("cpp/pbes.cpp");
+    rerun_if_changed!("cpp/data.h");
+    rerun_if_changed!("cpp/exception.h");
     rerun_if_changed!("cpp/log.h");
+    rerun_if_changed!("cpp/lps.h");
+    rerun_if_changed!("cpp/pbes.cpp");
+    rerun_if_changed!("cpp/pbes.h");
 }
 
 // Enable various additional debug defines based on the current profile.
