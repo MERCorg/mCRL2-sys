@@ -204,6 +204,16 @@ inline const detail::_function_symbol* mcrl2_aterm_get_function_symbol(const det
   return mcrl2_function_symbol_address(atermpp::down_cast<aterm>(tmp).function());
 }
 
+inline const detail::_function_symbol* mcrl2_aterm_list_function_symbol()
+{
+  return &detail::g_as_list;
+}
+
+inline const detail::_function_symbol* mcrl2_aterm_empty_list_function_symbol()
+{
+  return &detail::g_as_empty_list;
+}
+
 inline const detail::_aterm* mcrl2_aterm_get_argument(const detail::_aterm& term, std::size_t index)
 {
   atermpp::unprotected_aterm_core tmp(&term);

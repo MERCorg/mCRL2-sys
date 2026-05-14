@@ -101,6 +101,12 @@ pub mod ffi {
         /// Returns the function symbol of an aterm.
         fn mcrl2_aterm_get_function_symbol(term: &_aterm) -> *const _function_symbol;
 
+        /// Returns the function symbol used for non-empty list constructors.
+        fn mcrl2_aterm_list_function_symbol() -> *const _function_symbol;
+
+        /// Returns the function symbol used for the empty list constructor.
+        fn mcrl2_aterm_empty_list_function_symbol() -> *const _function_symbol;
+
         // Functions for managing function symbols
 
         /// Creates a function symbol with the given name and arity, increases the reference counter by one.
