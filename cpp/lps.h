@@ -35,7 +35,6 @@ inline std::unique_ptr<stochastic_specification>
 mcrl2_lps_preprocess_symbolic_exploration(
     const stochastic_specification &lpsspec) {
   stochastic_specification result = lpsspec;
-  lps::detail::replace_global_variables(result);
   lps::detail::instantiate_global_variables(result);
   lps::order_summand_variables(result);
   resolve_summand_variable_name_clashes(
