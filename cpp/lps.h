@@ -8,11 +8,13 @@
 #include "mcrl2/lps/detail/replace_global_variables.h"
 #include "mcrl2/lps/io.h"
 #include "mcrl2/lps/lpsreach.h"
+#include "mcrl2/lps/multi_action.h"
 #include "mcrl2/lps/one_point_rule_rewrite.h"
 #include "mcrl2/lps/order_summand_variables.h"
 #include "mcrl2/lps/replace_constants_by_variables.h"
 #include "mcrl2/lps/resolve_name_clashes.h"
 #include "mcrl2/lps/stochastic_specification.h"
+#include "mcrl2/process/process_expression.h"
 
 #include "mcrl2/data/enumerator.h"
 #include "mcrl2/data/substitution_utility.h"
@@ -61,6 +63,13 @@ inline std::unique_ptr<stochastic_process_initializer>
 mcrl2_lps_process_initializer(const stochastic_specification &spec) {
   return std::make_unique<stochastic_process_initializer>(
       spec.initial_process());
+}
+
+/// \brief Pretty-prints a multi-action term using the mCRL2 pretty printer.
+inline rust::String
+mcrl2_lps_multi_action_to_string(const atermpp::detail::_aterm &input) {
+  atermpp::unprotected_aterm_core tmp(&input);
+  return lps::pp(atermpp::down_cast<lps::multi_action>(tmp));
 }
 
 inline const atermpp::detail::_aterm *
@@ -117,18 +126,21 @@ mcrl2_lps_create_learn_successors_context(
 /// condition,
 ///        given the read parameter assignments from the current state.
 ///
-/// For each solution found, calls \p callback with \p callback_context and a
+/// For each solution found, calls \p callback with \p callback_context, a
 /// slice of the rewritten next-state values (one per assignment in the
-/// summand).
+/// summand) and a pointer to the rewritten multi-action term obtained by
+/// applying the current substitution to \p multi_action.
 inline void mcrl2_lps_enumerate(
     learn_successors_context &context, const atermpp::detail::_aterm &condition,
     const atermpp::detail::_aterm &summation_variables,
     const atermpp::detail::_aterm &assignments,
+    const atermpp::detail::_aterm &multi_action,
     rust::Slice<const atermpp::detail::_aterm *const> read_parameters,
     rust::Slice<const atermpp::detail::_aterm *const> read_values,
     std::uint8_t *callback_context,
     rust::Fn<void(std::uint8_t *,
-                  rust::Slice<const atermpp::detail::_aterm *const>)>
+                  rust::Slice<const atermpp::detail::_aterm *const>,
+                  const atermpp::detail::_aterm *)>
         callback) {
   using enumerator_element = data::enumerator_list_element_with_substitution<>;
   auto &sigma = context.sigma;
@@ -144,6 +156,11 @@ inline void mcrl2_lps_enumerate(
   atermpp::unprotected_aterm_core tmp_assign(&assignments);
   const auto &assignment_list =
       atermpp::down_cast<data::assignment_list>(tmp_assign);
+
+  // Interpret the multi-action term as a lps::multi_action.
+  atermpp::unprotected_aterm_core tmp_multi_action(&multi_action);
+  const auto &multi_action_template =
+      atermpp::down_cast<lps::multi_action>(tmp_multi_action);
 
   // Assign the read parameter values to sigma.
   for (std::size_t j = 0; j < read_parameters.size(); j++) {
@@ -172,7 +189,27 @@ inline void mcrl2_lps_enumerate(
             values.push_back(atermpp::detail::address(value));
           }
 
-          callback(callback_context, {values.data(), values.size()});
+          // Rewrite the arguments of each action in the multi-action under the
+          // current substitution.
+          const process::action_list &actions = multi_action_template.actions();
+          const data::data_expression &time = multi_action_template.time();
+          lps::multi_action rewritten_multi_action(
+              process::action_list(
+                  actions.begin(), actions.end(),
+                  [&](const process::action &a) {
+                    const auto &args = a.arguments();
+                    return process::action(
+                        a.label(),
+                        data::data_expression_list(
+                            args.begin(), args.end(),
+                            [&](const data::data_expression &x) {
+                              return rewr(x, sigma);
+                            }));
+                  }),
+              multi_action_template.has_time() ? rewr(time, sigma) : time);
+
+          callback(callback_context, {values.data(), values.size()},
+                   atermpp::detail::address(rewritten_multi_action));
           return false;
         },
         data::is_false);

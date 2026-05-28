@@ -27,6 +27,9 @@ pub mod ffi {
 
         fn mcrl2_lps_process_initializer(lps: &stochastic_specification) -> Result<UniquePtr<stochastic_process_initializer>>;
 
+        /// Pretty-prints a multi-action term using the mCRL2 pretty printer.
+        fn mcrl2_lps_multi_action_to_string(input: &_aterm) -> String;
+
         fn mcrl2_lps_action_summand_condition(summand: &stochastic_action_summand) -> *const _aterm;
 
         fn mcrl2_lps_action_summand_multi_action(summand: &stochastic_action_summand) -> *const _aterm;
@@ -43,16 +46,18 @@ pub mod ffi {
         fn mcrl2_lps_create_learn_successors_context(spec: &stochastic_specification) -> UniquePtr<learn_successors_context>;
 
         /// Enumerate all solutions for the summand's condition under the given read parameter assignments.
-        /// Calls the callback with the context pointer and a slice of next-state values for each solution.
+        /// Calls the callback with the context pointer, a slice of next-state values, and a pointer to
+        /// the rewritten multi-action term for each solution.
         unsafe fn mcrl2_lps_enumerate(
             context: Pin<&mut learn_successors_context>,
             condition: &_aterm,
             summation_variables: &_aterm,
             assignments: &_aterm,
+            multi_action: &_aterm,
             read_parameters: &[*const _aterm],
             read_values: &[*const _aterm],
             callback_context: *mut u8,
-            callback: unsafe fn(*mut u8, &[*const _aterm]),
+            callback: unsafe fn(*mut u8, &[*const _aterm], *const _aterm),
         );
     }
 }
