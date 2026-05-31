@@ -164,6 +164,13 @@ rust::String mcrl2_data_expression_to_string(const atermpp::detail::_aterm& inpu
   return data::pp(atermpp::down_cast<data::data_expression>(tmp));
 }
 
+inline
+rust::String mcrl2_sort_expression_to_string(const atermpp::detail::_aterm& input)
+{
+  atermpp::unprotected_aterm_core tmp(&input);
+  return data::pp(atermpp::down_cast<data::sort_expression>(tmp));
+}
+
 } // namespace mcrl2::data
 
 #endif // MCRL2_SYS_CPP_DATA_H

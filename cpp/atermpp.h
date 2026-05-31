@@ -190,6 +190,12 @@ inline bool mcrl2_aterm_is_int(const detail::_aterm& term)
   return atermpp::down_cast<aterm>(tmp).type_is_int();
 }
 
+inline std::uint64_t mcrl2_aterm_int_value(const detail::_aterm& term)
+{
+  atermpp::unprotected_aterm_core tmp(&term);
+  return static_cast<std::uint64_t>(atermpp::down_cast<aterm_int>(tmp).value());
+}
+
 inline rust::String mcrl2_aterm_print(const detail::_aterm& term)
 {
   std::stringstream str;

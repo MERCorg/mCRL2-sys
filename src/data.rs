@@ -61,5 +61,6 @@ pub mod ffi {
         fn mcrl2_is_data_sort_expression(input: &_aterm) -> bool;
 
         fn mcrl2_data_expression_to_string(input: &_aterm) -> String;
+        fn mcrl2_sort_expression_to_string(input: &_aterm) -> String;
     }
 }

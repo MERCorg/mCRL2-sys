@@ -92,6 +92,9 @@ pub mod ffi {
         /// Returns true iff the term is an aterm_int.
         fn mcrl2_aterm_is_int(term: &_aterm) -> bool;
 
+        /// Returns the integer value stored in an aterm_int.
+        fn mcrl2_aterm_int_value(term: &_aterm) -> u64;
+
         /// Converts an aterm to a string.
         fn mcrl2_aterm_print(term: &_aterm) -> String;
 
