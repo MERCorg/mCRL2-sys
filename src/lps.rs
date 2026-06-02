@@ -45,6 +45,13 @@ pub mod ffi {
         /// Creates a learn_successors_context containing a rewriter, substitution, and enumerator.
         fn mcrl2_lps_create_learn_successors_context(spec: &stochastic_specification) -> UniquePtr<learn_successors_context>;
 
+        /// Assign variables in the context substitution (sigma).
+        fn mcrl2_lps_set_assignments(
+            context: Pin<&mut learn_successors_context>,
+            variables: &[*const _aterm],
+            values: &[*const _aterm],
+        );
+
         /// Enumerate all solutions for the summand's condition under the given read parameter assignments.
         /// Calls the callback with the context pointer, a slice of next-state values, and a pointer to
         /// the rewritten multi-action term for each solution.
@@ -54,8 +61,6 @@ pub mod ffi {
             summation_variables: &_aterm,
             assignments: &_aterm,
             multi_action: &_aterm,
-            read_parameters: &[*const _aterm],
-            read_values: &[*const _aterm],
             callback_context: *mut u8,
             callback: unsafe fn(*mut u8, &[*const _aterm], *const _aterm),
         );

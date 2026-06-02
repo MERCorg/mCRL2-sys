@@ -108,7 +108,11 @@ struct learn_successors_context {
   data::mutable_indexed_substitution<> sigma;
   data::enumerator_identifier_generator id_generator;
   data::enumerator_algorithm<> enumerator;
-  // Temporary vector used for the returned values.
+  // Protected next-state values for the current solution. These keep the
+  // rewritten terms alive across term creation that happens before the
+  // callback is invoked (e.g. building the rewritten multi-action).
+  std::vector<data::data_expression> value_terms;
+  // Raw addresses of value_terms, handed to the callback as a slice.
   std::vector<const atermpp::detail::_aterm *> values;
 
   learn_successors_context(const data::data_specification &dataspec)
@@ -120,6 +124,21 @@ inline std::unique_ptr<learn_successors_context>
 mcrl2_lps_create_learn_successors_context(
     const stochastic_specification &spec) {
   return std::make_unique<learn_successors_context>(spec.data());
+}
+
+/// Assign variables in the context substitution (sigma).
+inline void mcrl2_lps_set_assignments(
+    learn_successors_context &context,
+    rust::Slice<const atermpp::detail::_aterm *const> variables,
+    rust::Slice<const atermpp::detail::_aterm *const> values) {
+  auto &sigma = context.sigma;
+
+  for (std::size_t i = 0; i < variables.size(); i++) {
+    atermpp::unprotected_aterm_core var_term(variables[i]);
+    atermpp::unprotected_aterm_core value_term(values[i]);
+    sigma[atermpp::down_cast<data::variable>(var_term)] =
+        atermpp::down_cast<data::data_expression>(value_term);
+  }
 }
 
 /// \brief Enumerate all solutions for the summand variables that satisfy the
@@ -135,8 +154,6 @@ inline void mcrl2_lps_enumerate(
     const atermpp::detail::_aterm &summation_variables,
     const atermpp::detail::_aterm &assignments,
     const atermpp::detail::_aterm &multi_action,
-    rust::Slice<const atermpp::detail::_aterm *const> read_parameters,
-    rust::Slice<const atermpp::detail::_aterm *const> read_values,
     std::uint8_t *callback_context,
     rust::Fn<void(std::uint8_t *,
                   rust::Slice<const atermpp::detail::_aterm *const>,
@@ -147,6 +164,15 @@ inline void mcrl2_lps_enumerate(
   auto &rewr = context.rewr;
   auto &enumerator = context.enumerator;
   auto &values = context.values;
+  auto &value_terms = context.value_terms;
+
+  // Rewind the identifier generator so each enumeration reuses the same fresh
+  // variable names (x_0, x_1, ...) instead of minting new function symbols on
+  // every call. Function symbols are interned globally and never collected, so
+  // without this the symbol pool grows for the whole exploration. This mirrors
+  // mCRL2's own explorer, which clears the generator before each
+  // generate_transitions call (see lps/explorer.h, the !m_recursive branch).
+  context.id_generator.clear();
 
   // Interpret the summation variables as a variable_list.
   atermpp::unprotected_aterm_core tmp_vars(&summation_variables);
@@ -162,14 +188,6 @@ inline void mcrl2_lps_enumerate(
   const auto &multi_action_template =
       atermpp::down_cast<lps::multi_action>(tmp_multi_action);
 
-  // Assign the read parameter values to sigma.
-  for (std::size_t j = 0; j < read_parameters.size(); j++) {
-    atermpp::unprotected_aterm_core param_term(read_parameters[j]);
-    atermpp::unprotected_aterm_core value_term(read_values[j]);
-    sigma[atermpp::down_cast<data::variable>(param_term)] =
-        atermpp::down_cast<data::data_expression>(value_term);
-  }
-
   // Rewrite the condition under the current substitution.
   atermpp::unprotected_aterm_core cond_term(&condition);
   data::data_expression rewritten_condition =
@@ -181,12 +199,14 @@ inline void mcrl2_lps_enumerate(
         [&](const enumerator_element &p) {
           p.add_assignments(variables, sigma, rewr);
 
-          // Rewrite the right-hand sides of the assignments and add them to the
-          // returned values.
-          values.clear();
+          // Rewrite the right-hand sides of the assignments and keep them
+          // protected in value_terms. We must not store only their raw
+          // addresses here: constructing the rewritten multi-action below
+          // creates new terms, which can reclaim these otherwise unprotected
+          // terms before the callback observes them.
+          value_terms.clear();
           for (const auto &assignment : assignment_list) {
-            data::data_expression value = rewr(assignment.rhs(), sigma);
-            values.push_back(atermpp::detail::address(value));
+            value_terms.push_back(rewr(assignment.rhs(), sigma));
           }
 
           // Rewrite the arguments of each action in the multi-action under the
@@ -208,6 +228,13 @@ inline void mcrl2_lps_enumerate(
                   }),
               multi_action_template.has_time() ? rewr(time, sigma) : time);
 
+          // All term creation is done; collect the addresses of the protected
+          // value terms for the callback slice.
+          values.clear();
+          for (const auto &value : value_terms) {
+            values.push_back(atermpp::detail::address(value));
+          }
+
           callback(callback_context, {values.data(), values.size()},
                    atermpp::detail::address(rewritten_multi_action));
           return false;
@@ -215,8 +242,8 @@ inline void mcrl2_lps_enumerate(
         data::is_false);
   }
 
-  // Clean up sigma.
-  sigma.clear();
+  // Keep process-parameter assignments and only remove summation variables.
+  remove_assignments(sigma, variables);
 }
 
 } // namespace mcrl2::lps
