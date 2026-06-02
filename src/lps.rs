@@ -30,6 +30,11 @@ pub mod ffi {
         /// Pretty-prints a multi-action term using the mCRL2 pretty printer.
         fn mcrl2_lps_multi_action_to_string(input: &_aterm) -> String;
 
+        /// Returns the address of the tau (empty) multi-action term. The
+        /// pointer is backed by a static and remains valid for the process
+        /// lifetime.
+        fn mcrl2_lps_tau_multi_action() -> *const _aterm;
+
         fn mcrl2_lps_action_summand_condition(summand: &stochastic_action_summand) -> *const _aterm;
 
         fn mcrl2_lps_action_summand_multi_action(summand: &stochastic_action_summand) -> *const _aterm;
@@ -59,6 +64,33 @@ pub mod ffi {
             context: Pin<&mut learn_successors_context>,
             condition: &_aterm,
             summation_variables: &_aterm,
+            assignments: &_aterm,
+            multi_action: &_aterm,
+            callback_context: *mut u8,
+            callback: unsafe fn(*mut u8, &[*const _aterm], *const _aterm),
+        );
+
+        /// Like `mcrl2_lps_enumerate`, but additionally passes the
+        /// summation-variable solution slice to the callback for each solution.
+        /// The solution can be cached and replayed via `mcrl2_lps_compute_successor`.
+        unsafe fn mcrl2_lps_enumerate_solutions(
+            context: Pin<&mut learn_successors_context>,
+            condition: &_aterm,
+            summation_variables: &_aterm,
+            assignments: &_aterm,
+            multi_action: &_aterm,
+            callback_context: *mut u8,
+            callback: unsafe fn(*mut u8, &[*const _aterm], *const _aterm, &[*const _aterm]),
+        );
+
+        /// Recomputes the next-state values and multi-action for a cached
+        /// summation-variable solution, without re-enumerating the condition.
+        /// The current substitution is expected to already contain the
+        /// read-parameter assignments of the source state.
+        unsafe fn mcrl2_lps_compute_successor(
+            context: Pin<&mut learn_successors_context>,
+            summation_variables: &_aterm,
+            summation_values: &[*const _aterm],
             assignments: &_aterm,
             multi_action: &_aterm,
             callback_context: *mut u8,
