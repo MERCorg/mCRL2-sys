@@ -4,6 +4,7 @@
 
 #include "mcrl2/atermpp/aterm.h"
 #include "mcrl2/data/data_specification.h"
+#include "mcrl2/data/assignment.h"
 #include "mcrl2/pbes/detail/stategraph_local_algorithm.h"
 #include "mcrl2/pbes/detail/stategraph_pbes.h"
 #include "mcrl2/pbes/io.h"
@@ -364,6 +365,45 @@ inline
 const atermpp::detail::_aterm* mcrl2_srf_summand_condition(const srf_summand& summand)
 {
   return atermpp::detail::address(summand.condition());
+}
+
+inline
+const atermpp::detail::_aterm* mcrl2_srf_summand_parameters(const srf_summand& summand)
+{
+  return atermpp::detail::address(summand.parameters());
+}
+
+inline
+bool mcrl2_srf_equation_is_conjunctive(const srf_equation& equation)
+{
+  return equation.is_conjunctive();
+}
+
+inline
+bool mcrl2_srf_equation_is_mu(const srf_equation& equation)
+{
+  return equation.symbol() == fixpoint_symbol::mu();
+}
+
+inline
+const atermpp::detail::_aterm* mcrl2_pbes_initial_state(const pbes& p)
+{
+  return atermpp::detail::address(p.initial_state());
+}
+
+/// Build a data::assignment_list from two parallel term lists (variables and values).
+/// The resulting term can be passed directly to mcrl2_lps_enumerate as the assignments argument.
+inline
+std::unique_ptr<atermpp::aterm> mcrl2_make_data_assignment_list(
+    const atermpp::detail::_aterm& variables_term,
+    const atermpp::detail::_aterm& values_term)
+{
+  atermpp::unprotected_aterm_core vars_tmp(&variables_term);
+  atermpp::unprotected_aterm_core vals_tmp(&values_term);
+  const auto& vars = atermpp::down_cast<data::variable_list>(vars_tmp);
+  const auto& vals = atermpp::down_cast<data::data_expression_list>(vals_tmp);
+
+  return std::make_unique<atermpp::aterm>(data::make_assignment_list(vars, vals));
 }
 
 std::unique_ptr<atermpp::aterm> mcrl2_pbes_expression_replace_variables(const atermpp::detail::_aterm& expr, const rust::Vec<assignment_pair>& sigma);

@@ -159,7 +159,18 @@ pub mod ffi {
 
         fn mcrl2_srf_summand_variable(summand: &srf_summand) -> *const _aterm;
 
+        fn mcrl2_srf_summand_parameters(summand: &srf_summand) -> *const _aterm;
+
+        fn mcrl2_srf_equation_is_conjunctive(equation: &srf_equation) -> bool;
+
+        fn mcrl2_srf_equation_is_mu(equation: &srf_equation) -> bool;
+
+        fn mcrl2_pbes_initial_state(input: &pbes) -> *const _aterm;
+
         unsafe fn mcrl2_srf_pbes_equation_variable(equation: &srf_equation) -> *const _aterm;
+
+        /// Build a data::assignment_list from two parallel term-lists (data::variable_list and data::data_expression_list).
+        fn mcrl2_make_data_assignment_list(variables: &_aterm, values: &_aterm) -> UniquePtr<aterm>;
 
         /// Replace data variables in a pbes expression according to the given substitutions.
         fn mcrl2_pbes_expression_replace_variables(
