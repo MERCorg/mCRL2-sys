@@ -15,8 +15,11 @@ pub mod ffi {
         #[namespace = "atermpp::detail"]
         type _aterm = crate::atermpp::ffi::_aterm;
 
-        /// Loads an LPS from a file.
+        /// Loads an LPS from a binary file.
         fn mcrl2_lps_load_from_lps_file(filename: &str) -> Result<UniquePtr<stochastic_specification>>;
+
+        /// Loads an LPS from a textual mCRL2 process specification file.
+        fn mcrl2_lps_load_from_text_file(filename: &str) -> Result<UniquePtr<stochastic_specification>>;
 
         /// Preprocess the LPS in a way that is suitable for symbolic exploration.
         fn mcrl2_lps_preprocess_symbolic_exploration(lps: &stochastic_specification) -> Result<UniquePtr<stochastic_specification>>;     
@@ -49,6 +52,12 @@ pub mod ffi {
 
         /// Creates a learn_successors_context containing a rewriter, substitution, and enumerator.
         fn mcrl2_lps_create_learn_successors_context(spec: &stochastic_specification) -> UniquePtr<learn_successors_context>;
+
+        /// Creates a learn_successors_context from a data specification alone (used when no LPS is available).
+        #[namespace = "mcrl2::data"]
+        type data_specification = crate::data::ffi::data_specification;
+
+        fn mcrl2_lps_create_learn_successors_context_from_data_spec(data_spec: &data_specification) -> UniquePtr<learn_successors_context>;
 
         /// Assign variables in the context substitution (sigma).
         fn mcrl2_lps_set_assignments(

@@ -8,6 +8,7 @@
 #include "mcrl2/lps/detail/replace_global_variables.h"
 #include "mcrl2/lps/io.h"
 #include "mcrl2/lps/lpsreach.h"
+#include "mcrl2/lps/parse.h"
 #include "mcrl2/lps/multi_action.h"
 #include "mcrl2/lps/one_point_rule_rewrite.h"
 #include "mcrl2/lps/order_summand_variables.h"
@@ -30,6 +31,18 @@ inline std::unique_ptr<stochastic_specification>
 mcrl2_lps_load_from_lps_file(rust::Str filename) {
   stochastic_specification result;
   load_lps(result, static_cast<std::string>(filename));
+  return std::make_unique<stochastic_specification>(result);
+}
+
+inline std::unique_ptr<stochastic_specification>
+mcrl2_lps_load_from_text_file(rust::Str filename) {
+  stochastic_specification result;
+  std::ifstream ifs(static_cast<std::string>(filename));
+  if (!ifs.good())
+  {
+    throw mcrl2::runtime_error("Could not open file " + static_cast<std::string>(filename) + ".");
+  }
+  parse_lps(ifs, result);
   return std::make_unique<stochastic_specification>(result);
 }
 
@@ -140,6 +153,12 @@ inline std::unique_ptr<learn_successors_context>
 mcrl2_lps_create_learn_successors_context(
     const stochastic_specification &spec) {
   return std::make_unique<learn_successors_context>(spec.data());
+}
+
+inline std::unique_ptr<learn_successors_context>
+mcrl2_lps_create_learn_successors_context_from_data_spec(
+    const data::data_specification &data_spec) {
+  return std::make_unique<learn_successors_context>(data_spec);
 }
 
 /// Assign variables in the context substitution (sigma).
