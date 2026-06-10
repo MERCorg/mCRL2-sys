@@ -167,6 +167,8 @@ pub mod ffi {
 
         fn mcrl2_pbes_initial_state(input: &pbes) -> *const _aterm;
 
+        fn mcrl2_srf_pbes_initial_state(input: &srf_pbes) -> *const _aterm;
+
         unsafe fn mcrl2_srf_pbes_equation_variable(equation: &srf_equation) -> *const _aterm;
 
         /// Build a data::assignment_list from two parallel term-lists (data::variable_list and data::data_expression_list).

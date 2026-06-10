@@ -127,6 +127,11 @@ inline const atermpp::detail::_aterm *mcrl2_lps_process_initializer_expressions(
 }
 
 struct learn_successors_context {
+  // Owned copy of the data specification. enumerator_algorithm stores a const
+  // reference to the data spec (m_dataspec in enumerator.h), so this member
+  // must outlive the enumerator. Declared first so it is initialized before
+  // rewr and enumerator in the member-initializer list.
+  data::data_specification m_dataspec;
   data::rewriter rewr;
   data::mutable_indexed_substitution<> sigma;
   data::enumerator_identifier_generator id_generator;
@@ -145,8 +150,9 @@ struct learn_successors_context {
   std::vector<const atermpp::detail::_aterm *> summation_values;
 
   learn_successors_context(const data::data_specification &dataspec)
-      : rewr(dataspec, data::used_data_equation_selector(dataspec)),
-        enumerator(rewr, dataspec, rewr, id_generator, false) {}
+      : m_dataspec(dataspec),
+        rewr(m_dataspec, data::used_data_equation_selector(m_dataspec)),
+        enumerator(rewr, m_dataspec, rewr, id_generator, false) {}
 };
 
 inline std::unique_ptr<learn_successors_context>

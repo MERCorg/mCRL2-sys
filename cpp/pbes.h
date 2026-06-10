@@ -391,6 +391,12 @@ const atermpp::detail::_aterm* mcrl2_pbes_initial_state(const pbes& p)
   return atermpp::detail::address(p.initial_state());
 }
 
+inline
+const atermpp::detail::_aterm* mcrl2_srf_pbes_initial_state(const srf_pbes& p)
+{
+  return atermpp::detail::address(p.initial_state());
+}
+
 /// Build a data::assignment_list from two parallel term lists (variables and values).
 /// The resulting term can be passed directly to mcrl2_lps_enumerate as the assignments argument.
 inline
