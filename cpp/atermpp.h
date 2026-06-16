@@ -93,6 +93,16 @@ inline void mcrl2_aterm_pool_collect_garbage()
   detail::g_thread_term_pool().collect();
 }
 
+inline void mcrl2_aterm_pool_enable_automatic_resize(bool enabled)
+{
+  detail::g_term_pool().enable_resize(enabled);
+}
+
+inline void mcrl2_aterm_pool_resize()
+{
+  detail::g_thread_term_pool().resize();
+}
+
 inline void mcrl2_aterm_pool_test_garbage_collection()
 {
   // TODO: Is this function necessary?

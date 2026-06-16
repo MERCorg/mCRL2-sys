@@ -33,6 +33,20 @@ pub mod ffi {
         /// Trigger garbage collection.
         fn mcrl2_aterm_pool_collect_garbage();
 
+        /// Enable or disable automatic hash table resizing.
+        ///
+        /// # Warning
+        /// Resizing acquires the exclusive busy-forbidden lock, which is not
+        /// reentrant. It must not run automatically from a worker thread that may
+        /// be inside a shared section while other threads are parked. Disable it
+        /// around parallel work and call `mcrl2_aterm_pool_resize` from a
+        /// quiescent point instead.
+        fn mcrl2_aterm_pool_enable_automatic_resize(enabled: bool);
+
+        /// Resize the global aterm pool hash tables when needed. Must be called
+        /// while the calling thread is not inside a shared section.
+        fn mcrl2_aterm_pool_resize();
+
         /// Triggers a garbage collection when internal heuristics have determined it to be necessasry.
         fn mcrl2_aterm_pool_test_garbage_collection();
 
