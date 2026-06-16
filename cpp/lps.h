@@ -46,18 +46,92 @@ mcrl2_lps_load_from_text_file(rust::Str filename) {
   return std::make_unique<stochastic_specification>(result);
 }
 
-inline std::unique_ptr<stochastic_specification>
-mcrl2_lps_preprocess_symbolic_exploration(
-    const stochastic_specification &lpsspec) {
-  stochastic_specification result = lpsspec;
-  lps::detail::instantiate_global_variables(result);
-  lps::order_summand_variables(result);
-  resolve_summand_variable_name_clashes(
-      result); // N.B. This is a required preprocessing step.
-  one_point_rule_rewrite(result);
-  // replace_constants_by_variables(result, m_rewr, m_sigma);
+/// \brief Bundles a preprocessed specification together with the constant
+///        substitution produced by replace_constants_by_variables.
+///
+/// The mCRL2 explorer keeps the assignments of the fresh @rewr_var variables in
+/// its global substitution (m_global_sigma) and copies them into every worker's
+/// sigma. We mirror that by recording them here as an assignment_list so they
+/// can be seeded into each enumeration context's substitution on the Rust side.
+struct preprocessed_specification {
+  stochastic_specification spec;
+  data::assignment_list constant_assignments;
+};
 
-  return std::make_unique<stochastic_specification>(result);
+/// \brief Preprocesses an LPS for state-space exploration, applying the same
+///        steps (and in the same order) as the mCRL2 explorer (see
+///        lps/explorer.h and lps/lpsreach.h). Each step can be toggled
+///        individually.
+///
+/// When \p replace_constants_by_variables_flag is set, constant subexpressions
+/// are replaced by fresh variables and the corresponding (variable := value)
+/// substitution is recorded in the returned struct so it can be applied to the
+/// enumeration substitution, exactly as the explorer does via m_global_sigma.
+inline std::unique_ptr<preprocessed_specification>
+mcrl2_lps_preprocess_symbolic_exploration(
+    const stochastic_specification &lpsspec,
+    bool instantiate_global_variables_flag,
+    bool order_summand_variables_flag,
+    bool resolve_name_clashes_flag,
+    bool one_point_rule_rewrite_flag,
+    bool replace_constants_by_variables_flag) {
+  stochastic_specification result = lpsspec;
+
+  if (instantiate_global_variables_flag) {
+    lps::detail::instantiate_global_variables(result);
+  }
+  if (order_summand_variables_flag) {
+    lps::order_summand_variables(result);
+  }
+  if (resolve_name_clashes_flag) {
+    // N.B. This is a required preprocessing step for the enumerator.
+    resolve_summand_variable_name_clashes(result);
+  }
+  if (one_point_rule_rewrite_flag) {
+    one_point_rule_rewrite(result);
+  }
+
+  data::assignment_list constant_assignments;
+  if (replace_constants_by_variables_flag) {
+    // Use a rewriter constructed identically to the one in
+    // learn_successors_context, so the rewritten constant values match the
+    // normal forms produced during enumeration.
+    data::rewriter rewr(result.data(),
+                        data::used_data_equation_selector(result.data()));
+    data::mutable_indexed_substitution<> sigma;
+    lps::detail::replace_constants_by_variables_builder f(rewr, sigma);
+    f.update(result);
+
+    // Capture the (fresh variable := rewritten constant) substitution recorded
+    // by the builder so it can be seeded into each enumeration context's sigma.
+    std::vector<data::assignment> assignments;
+    assignments.reserve(f.substitutions.size());
+    for (const auto &entry : f.substitutions) {
+      const data::variable &var = entry.second;
+      assignments.push_back(data::assignment(var, sigma(var)));
+    }
+    constant_assignments =
+        data::assignment_list(assignments.begin(), assignments.end());
+  }
+
+  return std::make_unique<preprocessed_specification>(
+      preprocessed_specification{std::move(result),
+                                 std::move(constant_assignments)});
+}
+
+/// \brief Returns a copy of the preprocessed specification.
+inline std::unique_ptr<stochastic_specification>
+mcrl2_preprocessed_specification_spec(const preprocessed_specification &pp) {
+  return std::make_unique<stochastic_specification>(pp.spec);
+}
+
+/// \brief Returns the address of the constant substitution (an assignment_list)
+///        captured during preprocessing. The list is empty when
+///        replace_constants_by_variables was not applied.
+inline const atermpp::detail::_aterm *
+mcrl2_preprocessed_specification_constant_assignments(
+    const preprocessed_specification &pp) {
+  return atermpp::detail::address(pp.constant_assignments);
 }
 
 inline std::size_t

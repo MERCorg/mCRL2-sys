@@ -15,6 +15,10 @@ pub mod ffi {
         #[namespace = "atermpp::detail"]
         type _aterm = crate::atermpp::ffi::_aterm;
 
+        /// Bundles a preprocessed specification with the constant substitution
+        /// produced by replace_constants_by_variables.
+        type preprocessed_specification;
+
         /// Loads an LPS from a binary file.
         fn mcrl2_lps_load_from_lps_file(filename: &str) -> Result<UniquePtr<stochastic_specification>>;
 
@@ -22,7 +26,27 @@ pub mod ffi {
         fn mcrl2_lps_load_from_text_file(filename: &str) -> Result<UniquePtr<stochastic_specification>>;
 
         /// Preprocess the LPS in a way that is suitable for symbolic exploration.
-        fn mcrl2_lps_preprocess_symbolic_exploration(lps: &stochastic_specification) -> Result<UniquePtr<stochastic_specification>>;     
+        /// Each preprocessing step can be enabled individually.
+        fn mcrl2_lps_preprocess_symbolic_exploration(
+            lps: &stochastic_specification,
+            instantiate_global_variables: bool,
+            order_summand_variables: bool,
+            resolve_name_clashes: bool,
+            one_point_rule_rewrite: bool,
+            replace_constants_by_variables: bool,
+        ) -> Result<UniquePtr<preprocessed_specification>>;
+
+        /// Returns a copy of the preprocessed specification.
+        fn mcrl2_preprocessed_specification_spec(
+            pp: &preprocessed_specification,
+        ) -> UniquePtr<stochastic_specification>;
+
+        /// Returns the constant substitution (an assignment_list) captured
+        /// during preprocessing; empty when replace_constants_by_variables was
+        /// not applied.
+        fn mcrl2_preprocessed_specification_constant_assignments(
+            pp: &preprocessed_specification,
+        ) -> *const _aterm;
 
         fn mcrl2_lps_num_of_action_summands(lps: &stochastic_specification) -> usize;
 
