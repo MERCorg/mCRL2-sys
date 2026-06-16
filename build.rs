@@ -45,6 +45,7 @@ fn main() {
         "aterm_io_text.cpp",
         "function_symbol.cpp",
         "function_symbol_pool.cpp",
+        "gc_stress_thread.cpp",
     ];
 
     let core_source_files = ["dparser.cpp", "core.cpp"];
