@@ -90,6 +90,15 @@ pub mod ffi {
             values: &[*const _aterm],
         );
 
+        /// Rewrites the expression under the context's current substitution
+        /// (sigma) and returns the address of the resulting term. Used to
+        /// normalise the initial state expressions, resolving any @rewr_var
+        /// variables introduced by replace_constants_by_variables.
+        unsafe fn mcrl2_lps_rewrite_under_sigma(
+            context: Pin<&mut learn_successors_context>,
+            expr: &_aterm,
+        ) -> *const _aterm;
+
         /// Enumerate all solutions for the summand's condition under the given read parameter assignments.
         /// Calls the callback with the context pointer, a slice of next-state values, and a pointer to
         /// the rewritten multi-action term for each solution.

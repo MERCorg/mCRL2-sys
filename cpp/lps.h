@@ -223,11 +223,35 @@ struct learn_successors_context {
   std::vector<data::data_expression> summation_value_terms;
   std::vector<const atermpp::detail::_aterm *> summation_values;
 
+  // Protected result of the most recent mcrl2_lps_rewrite_under_sigma call.
+  // Keeps the rewritten term alive until the Rust side protects it.
+  data::data_expression rewrite_result;
+
   learn_successors_context(const data::data_specification &dataspec)
       : m_dataspec(dataspec),
         rewr(m_dataspec, data::used_data_equation_selector(m_dataspec)),
         enumerator(rewr, m_dataspec, rewr, id_generator, false) {}
 };
+
+/// \brief Rewrites \p expr under the context's current substitution (sigma) and
+///        returns the address of the resulting term.
+///
+/// Used to normalise the initial state expressions, which may contain the fresh
+/// @rewr_var variables introduced by replace_constants_by_variables. This
+/// mirrors the explorer's compute_state, which rewrites every state expression
+/// under the global sigma so the constant variables resolve to their values.
+///
+/// The result is kept alive in the context's `rewrite_result` member, so the
+/// returned pointer is valid until the next call. Callers must protect the term
+/// on the Rust side before performing further aterm operations.
+inline const atermpp::detail::_aterm *
+mcrl2_lps_rewrite_under_sigma(learn_successors_context &context,
+                              const atermpp::detail::_aterm &expr) {
+  atermpp::unprotected_aterm_core tmp(&expr);
+  context.rewrite_result =
+      context.rewr(atermpp::down_cast<data::data_expression>(tmp), context.sigma);
+  return atermpp::detail::address(context.rewrite_result);
+}
 
 inline std::unique_ptr<learn_successors_context>
 mcrl2_lps_create_learn_successors_context(
