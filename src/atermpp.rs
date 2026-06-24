@@ -83,7 +83,10 @@ pub mod ffi {
         /// # Safety
         /// The function symbol and arguments will not be modified unless
         /// garbage collection marks the terms, which is done atomically.
-        unsafe fn mcrl2_aterm_create(function: &_function_symbol, arguments: &[*const _aterm]) -> *const _aterm;
+        unsafe fn mcrl2_aterm_create(
+            function: &_function_symbol,
+            arguments: &[*const _aterm],
+        ) -> *const _aterm;
 
         /// Creates an aterm_int from the given value.
         fn mcrl2_aterm_create_int(value: u64) -> *const _aterm;

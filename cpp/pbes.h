@@ -104,10 +104,11 @@ public:
       : super(input, pbesstategraph_options{.cache_marking_updates = true})
   {}
 
-  void run() override
+  void run()
   {
-    // We explicitly ignore the virtual call to run in the base class
-    detail::stategraph_algorithm::stategraph_algorithm::run(); // NOLINT(bugprone-parent-virtual-call)
+    // We only run the preprocessing of the base algorithm, explicitly skipping
+    // execute_core() (belongs/extra graph/marking steps) and execute_postprocessing().
+    execute_preprocessing();
 
     compute_local_control_flow_graphs();
 

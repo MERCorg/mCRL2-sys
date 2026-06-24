@@ -20,10 +20,14 @@ pub mod ffi {
         type preprocessed_specification;
 
         /// Loads an LPS from a binary file.
-        fn mcrl2_lps_load_from_lps_file(filename: &str) -> Result<UniquePtr<stochastic_specification>>;
+        fn mcrl2_lps_load_from_lps_file(
+            filename: &str,
+        ) -> Result<UniquePtr<stochastic_specification>>;
 
         /// Loads an LPS from a textual mCRL2 process specification file.
-        fn mcrl2_lps_load_from_text_file(filename: &str) -> Result<UniquePtr<stochastic_specification>>;
+        fn mcrl2_lps_load_from_text_file(
+            filename: &str,
+        ) -> Result<UniquePtr<stochastic_specification>>;
 
         /// Preprocess the LPS in a way that is suitable for symbolic exploration.
         /// Each preprocessing step can be enabled individually.
@@ -50,9 +54,14 @@ pub mod ffi {
 
         fn mcrl2_lps_num_of_action_summands(lps: &stochastic_specification) -> usize;
 
-        fn mcrl2_lps_action_summand(lps: &stochastic_specification, index: usize) -> Result<UniquePtr<stochastic_action_summand>>; 
+        fn mcrl2_lps_action_summand(
+            lps: &stochastic_specification,
+            index: usize,
+        ) -> Result<UniquePtr<stochastic_action_summand>>;
 
-        fn mcrl2_lps_process_initializer(lps: &stochastic_specification) -> Result<UniquePtr<stochastic_process_initializer>>;
+        fn mcrl2_lps_process_initializer(
+            lps: &stochastic_specification,
+        ) -> Result<UniquePtr<stochastic_process_initializer>>;
 
         /// Pretty-prints a multi-action term using the mCRL2 pretty printer.
         fn mcrl2_lps_multi_action_to_string(input: &_aterm) -> String;
@@ -62,26 +71,39 @@ pub mod ffi {
         /// lifetime.
         fn mcrl2_lps_tau_multi_action() -> *const _aterm;
 
-        fn mcrl2_lps_action_summand_condition(summand: &stochastic_action_summand) -> *const _aterm;
+        fn mcrl2_lps_action_summand_condition(summand: &stochastic_action_summand)
+        -> *const _aterm;
 
-        fn mcrl2_lps_action_summand_multi_action(summand: &stochastic_action_summand) -> *const _aterm;
+        fn mcrl2_lps_action_summand_multi_action(
+            summand: &stochastic_action_summand,
+        ) -> *const _aterm;
 
-        fn mcrl2_lps_action_summand_summation_variables(summand: &stochastic_action_summand) -> *const _aterm;
+        fn mcrl2_lps_action_summand_summation_variables(
+            summand: &stochastic_action_summand,
+        ) -> *const _aterm;
 
-        fn mcrl2_lps_action_summand_assignments(summand: &stochastic_action_summand) -> *const _aterm;
+        fn mcrl2_lps_action_summand_assignments(
+            summand: &stochastic_action_summand,
+        ) -> *const _aterm;
 
         fn mcrl2_lps_process_parameters(lps: &stochastic_specification) -> *const _aterm;
 
-        fn mcrl2_lps_process_initializer_expressions(init: &stochastic_process_initializer) -> *const _aterm;
+        fn mcrl2_lps_process_initializer_expressions(
+            init: &stochastic_process_initializer,
+        ) -> *const _aterm;
 
         /// Creates a learn_successors_context containing a rewriter, substitution, and enumerator.
-        fn mcrl2_lps_create_learn_successors_context(spec: &stochastic_specification) -> UniquePtr<learn_successors_context>;
+        fn mcrl2_lps_create_learn_successors_context(
+            spec: &stochastic_specification,
+        ) -> UniquePtr<learn_successors_context>;
 
         /// Creates a learn_successors_context from a data specification alone (used when no LPS is available).
         #[namespace = "mcrl2::data"]
         type data_specification = crate::data::ffi::data_specification;
 
-        fn mcrl2_lps_create_learn_successors_context_from_data_spec(data_spec: &data_specification) -> UniquePtr<learn_successors_context>;
+        fn mcrl2_lps_create_learn_successors_context_from_data_spec(
+            data_spec: &data_specification,
+        ) -> UniquePtr<learn_successors_context>;
 
         /// Assign variables in the context substitution (sigma).
         fn mcrl2_lps_set_assignments(

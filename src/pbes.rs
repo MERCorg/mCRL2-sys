@@ -43,7 +43,9 @@ pub mod ffi {
         type stategraph_algorithm;
 
         /// Run the state graph algorithm and obtain the result.
-        fn mcrl2_stategraph_local_algorithm_run(input: &pbes) -> Result<UniquePtr<stategraph_algorithm>>;
+        fn mcrl2_stategraph_local_algorithm_run(
+            input: &pbes,
+        ) -> Result<UniquePtr<stategraph_algorithm>>;
 
         #[namespace = "mcrl2::pbes_system::detail"]
         type local_control_flow_graph;
@@ -115,13 +117,19 @@ pub mod ffi {
         type _aterm = crate::atermpp::ffi::_aterm;
 
         /// Obtain the index of the variable associated with the vertex.
-        fn mcrl2_local_control_flow_graph_vertex_index(vertex: &local_control_flow_graph_vertex) -> usize;
+        fn mcrl2_local_control_flow_graph_vertex_index(
+            vertex: &local_control_flow_graph_vertex,
+        ) -> usize;
 
         /// Obtain the name of the variable associated with the vertex.
-        fn mcrl2_local_control_flow_graph_vertex_name(vertex: &local_control_flow_graph_vertex) -> *const _aterm;
+        fn mcrl2_local_control_flow_graph_vertex_name(
+            vertex: &local_control_flow_graph_vertex,
+        ) -> *const _aterm;
 
         /// Obtain the value of the variable associated with the vertex.
-        fn mcrl2_local_control_flow_graph_vertex_value(vertex: &local_control_flow_graph_vertex) -> *const _aterm;
+        fn mcrl2_local_control_flow_graph_vertex_value(
+            vertex: &local_control_flow_graph_vertex,
+        ) -> *const _aterm;
 
         /// Obtain the outgoing edges of the vertex.
         fn mcrl2_local_control_flow_graph_vertex_outgoing_edges(
@@ -144,10 +152,17 @@ pub mod ffi {
         /// Unify all parameters of the equations, optionally ignoring the equations
         /// related to counter example information. Finally, if reset is true, reset the
         /// newly introduced parameters to a default value.
-        fn mcrl2_srf_pbes_unify_parameters(input: Pin<&mut srf_pbes>, ignore_ce_equations: bool, reset: bool);
+        fn mcrl2_srf_pbes_unify_parameters(
+            input: Pin<&mut srf_pbes>,
+            ignore_ce_equations: bool,
+            reset: bool,
+        );
 
         /// Returns the summands of the given srf_equation.
-        fn mcrl2_srf_equations_summands(result: Pin<&mut CxxVector<srf_summand>>, input: &srf_equation);
+        fn mcrl2_srf_equations_summands(
+            result: Pin<&mut CxxVector<srf_summand>>,
+            input: &srf_equation,
+        );
 
         #[namespace = "atermpp"]
         type aterm = crate::atermpp::ffi::aterm;
@@ -172,7 +187,8 @@ pub mod ffi {
         unsafe fn mcrl2_srf_pbes_equation_variable(equation: &srf_equation) -> *const _aterm;
 
         /// Build a data::assignment_list from two parallel term-lists (data::variable_list and data::data_expression_list).
-        fn mcrl2_make_data_assignment_list(variables: &_aterm, values: &_aterm) -> UniquePtr<aterm>;
+        fn mcrl2_make_data_assignment_list(variables: &_aterm, values: &_aterm)
+        -> UniquePtr<aterm>;
 
         /// Replace data variables in a pbes expression according to the given substitutions.
         fn mcrl2_pbes_expression_replace_variables(

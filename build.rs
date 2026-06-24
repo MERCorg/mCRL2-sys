@@ -113,7 +113,13 @@ fn main() {
     build_dparser.compile("dparser");
 
     // These are the files for which we need to call cxxbuild to produce the bridge code.
-    let mut build = cxx_build::bridges(["src/atermpp.rs", "src/data.rs", "src/pbes.rs", "src/lps.rs", "src/log.rs"]);
+    let mut build = cxx_build::bridges([
+        "src/atermpp.rs",
+        "src/data.rs",
+        "src/pbes.rs",
+        "src/lps.rs",
+        "src/log.rs",
+    ]);
 
     // Additional files needed to compile the bridge, basically to build mCRL2 itself.
     build
@@ -138,7 +144,7 @@ fn main() {
                 // "libraries/pres/include",
                 "libraries/process/include",
                 // "libraries/smt/include",
-                // "libraries/symbolic/include",
+                "libraries/symbolic/include",
                 "libraries/utilities/include",
             ],
         ))
