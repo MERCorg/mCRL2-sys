@@ -124,6 +124,13 @@ pub mod ffi {
         /// Enumerate all solutions for the summand's condition under the given read parameter assignments.
         /// Calls the callback with the context pointer, a slice of next-state values, and a pointer to
         /// the rewritten multi-action term for each solution.
+        ///
+        /// # Safety
+        /// The `&[*const _aterm]` slice and the `*const _aterm` multi-action
+        /// pointer passed to `callback` are only valid for the duration of that
+        /// call: the underlying terms are protected by the context solely while
+        /// the callback runs. The callback must copy/protect anything it needs
+        /// to keep, and must not retain the raw pointers past its return.
         unsafe fn mcrl2_lps_enumerate(
             context: Pin<&mut learn_successors_context>,
             condition: &_aterm,

@@ -40,7 +40,7 @@ std::unique_ptr<pbes> mcrl2_load_pbes_from_pbes_file(rust::Str filename)
 {
   pbes result;
   load_pbes(result, static_cast<std::string>(filename));
-  return std::make_unique<pbes>(result);
+  return std::make_unique<pbes>(std::move(result));
 }
 
 inline 
@@ -48,7 +48,7 @@ std::unique_ptr<pbes> mcrl2_load_pbes_from_text_file(rust::Str filename)
 {
   pbes result;
   load_pbes(result, static_cast<std::string>(filename), pbes_format_text());
-  return std::make_unique<pbes>(result);
+  return std::make_unique<pbes>(std::move(result));
 }
 
 inline 
@@ -57,7 +57,7 @@ std::unique_ptr<pbes> mcrl2_load_pbes_from_text(rust::Str input)
   pbes result;
   std::istringstream stream(static_cast<std::string>(input));
   load_pbes(result, stream, pbes_format_text());
-  return std::make_unique<pbes>(result);
+  return std::make_unique<pbes>(std::move(result));
 }
 
 inline
@@ -154,16 +154,15 @@ inline
 const detail::local_control_flow_graph_vertex& mcrl2_local_control_flow_graph_vertex(const detail::local_control_flow_graph& cfg, std::size_t index)
 {
   // NOTE: `cfg.vertices` is a node-based set without random access, so we have
-  // to walk it to reach the `index`-th vertex.
-  for (auto it = cfg.vertices.begin(); it != cfg.vertices.end(); ++it)
+  // to walk it to reach the `index`-th vertex. Advance a single iterator (O(index))
+  // rather than recomputing std::distance for every element (which would be
+  // O(index^2) and O(n^2) when iterating all vertices from the Rust side).
+  if (index >= cfg.vertices.size())
   {
-    if (std::distance(cfg.vertices.begin(), it) == static_cast<std::ptrdiff_t>(index))
-    {
-      return *it;
-    }
+    throw std::out_of_range("Index out of range in mcrl2_local_control_flow_graph_vertex");
   }
 
-  throw std::out_of_range("Index out of range in mcrl2_local_control_flow_graph_vertex");
+  return *std::next(cfg.vertices.begin(), static_cast<std::ptrdiff_t>(index));
 }
 
 // namespace mcrl2::pbes_system::detail::local_control_flow_graph_vertex

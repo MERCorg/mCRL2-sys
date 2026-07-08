@@ -182,6 +182,7 @@ fn main() {
         ))
         .file("cpp/pbes.cpp")
         .file("cpp/data.cpp")
+        .file("cpp/lps.cpp")
         .file(mcrl2_workarounds_path.clone() + "mcrl2_syntax.c"); // This is to avoid generating the dparser grammer.
 
     #[cfg(feature = "jittyc")]
@@ -208,6 +209,7 @@ fn main() {
     build.compile("mcrl2-sys");
 
     // These files should trigger a rebuild.
+    rerun_if_changed!("build.rs");
     rerun_if_changed!("cpp/assert.h");
     rerun_if_changed!("cpp/atermpp.h");
     rerun_if_changed!("cpp/data.cpp");
@@ -215,8 +217,10 @@ fn main() {
     rerun_if_changed!("cpp/exception.h");
     rerun_if_changed!("cpp/log.h");
     rerun_if_changed!("cpp/lps.h");
+    rerun_if_changed!("cpp/lps.cpp");
     rerun_if_changed!("cpp/pbes.cpp");
     rerun_if_changed!("cpp/pbes.h");
+    rerun_if_changed!(mcrl2_workarounds_path.clone() + "mcrl2_syntax.c");
 }
 
 // Enable various additional debug defines based on the current profile.

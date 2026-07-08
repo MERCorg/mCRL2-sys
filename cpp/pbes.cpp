@@ -56,10 +56,14 @@ std::unique_ptr<atermpp::aterm> mcrl2_pbes_expression_replace_propositional_vari
       atermpp::down_cast<pbes_expression>(tmp_expr),
       [pi](const propositional_variable_instantiation& v) -> pbes_expression
       {
-        std::vector<data::data_expression> new_parameters(v.parameters().size());
-        for (std::size_t i = 0; i < v.parameters().size(); ++i)
+        const std::size_t num_parameters = v.parameters().size();
+        std::vector<data::data_expression> new_parameters(num_parameters);
+        for (std::size_t i = 0; i < num_parameters; ++i)
         {
-          if (i >= pi.size())
+          // pi must map every source position to a distinct valid target
+          // position, so both the read of pi[i] and the write into
+          // new_parameters[pi[i]] stay in bounds.
+          if (i >= pi.size() || pi[i] >= num_parameters)
           {
             throw mcrl2::runtime_error("Index out of bounds in replace_propositional_variables");
           }

@@ -27,6 +27,6 @@ namespace rust::behavior {
   }
 #endif // MCRL2_ENABLE_CPPTRACE
 
-} // namespace rust::behaviour
+} // namespace rust::behavior
 
 #endif // MCRL2_SYS_CPP_EXCEPTION_H
