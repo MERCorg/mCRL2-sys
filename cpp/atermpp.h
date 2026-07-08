@@ -129,12 +129,6 @@ inline void mcrl2_aterm_pool_resize()
   detail::g_thread_term_pool().resize();
 }
 
-inline void mcrl2_aterm_pool_test_garbage_collection()
-{
-  // TODO: Is this function necessary?
-  // detail::g_thread_term_pool().test_garbage_collection();
-}
-
 inline void mcrl2_aterm_pool_lock_shared()
 {
   detail::g_thread_term_pool().shared_mutex().lock_shared_impl();

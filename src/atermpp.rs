@@ -47,9 +47,6 @@ pub mod ffi {
         /// while the calling thread is not inside a shared section.
         fn mcrl2_aterm_pool_resize();
 
-        /// Triggers a garbage collection when internal heuristics have determined it to be necessasry.
-        fn mcrl2_aterm_pool_test_garbage_collection();
-
         /// Locks and unlocks the global aterm pool for shared access.
         fn mcrl2_aterm_pool_lock_shared();
 
