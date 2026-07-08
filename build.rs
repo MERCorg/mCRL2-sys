@@ -199,7 +199,7 @@ fn main() {
     // Enable thread safety since Rust executes its tests at least by default, and allow threading in general.
     build.define("MCRL2_ENABLE_MULTITHREADING", "1");
 
-    // Disable machine numbers since their changes are not compatible with Sabre yet
+    // Enable machine numbers.
     build.define("MCRL2_ENABLE_MACHINENUMBERS", "1");
 
     add_compile_flags(&mut build, mcrl2_path);
@@ -262,8 +262,7 @@ fn add_compile_flags(build: &mut Build, mcrl2_path: String) {
     build
         .flag_if_supported("-Wno-unused-parameter") // I don't care about unused parameters in mCRL2 code.
         .flag_if_supported("-pipe")
-        .flag_if_supported("-pedantic")
-        .flag_if_supported("c++");
+        .flag_if_supported("-pedantic");
 
     #[cfg(windows)]
     build
