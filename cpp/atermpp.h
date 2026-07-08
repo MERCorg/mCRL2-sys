@@ -10,6 +10,8 @@
 
 #include "rust/cxx.h"
 
+#include "mcrl2-sys/cpp/assert.h"
+
 #include <cstddef>
 #include <memory>
 #include <new>
@@ -33,13 +35,37 @@ struct unprotected_function_symbol
   mcrl2::utilities::shared_reference<const detail::_function_symbol> m_symbol;
 };
 
+/// Reinterprets a reference of type `From` as a reference of type `To`, but only
+/// when both types share the same size and alignment.
+///
+/// These layout-punning casts are otherwise silent undefined behaviour. The
+/// static_asserts turn them into a compile-time check, so a change to the
+/// underlying mCRL2 layouts is caught at build time instead of corrupting memory
+/// at run time.
+template <typename To, typename From>
+inline To& layout_cast(From& from)
+{
+  static_assert(sizeof(To) == sizeof(From), "layout_cast requires both types to have the same size");
+  static_assert(alignof(To) == alignof(From), "layout_cast requires both types to have the same alignment");
+  return reinterpret_cast<To&>(from);
+}
+
+/// Pointer overload of `layout_cast`, see the reference overload above.
+template <typename To, typename From>
+inline To* layout_cast(From* from)
+{
+  static_assert(sizeof(To) == sizeof(From), "layout_cast requires both types to have the same size");
+  static_assert(alignof(To) == alignof(From), "layout_cast requires both types to have the same alignment");
+  return reinterpret_cast<To*>(from);
+}
+
 /// Returns the internal address of a function symbol.
 inline const detail::_function_symbol* mcrl2_function_symbol_address(const function_symbol& symbol)
 {
-  return reinterpret_cast<const unprotected_function_symbol&>(symbol).m_symbol.get();
+  return layout_cast<const unprotected_function_symbol>(symbol).m_symbol.get();
 }
 
-// What the fuck is this. Leaks the inner type because unions are not destructed automatically.
+// Leaks the inner type, using the fact that unions are not destructed automatically.
 template <typename T>
 class Leaker
 {
@@ -146,24 +172,27 @@ inline void mcrl2_aterm_pool_print_metrics()
 inline const detail::_aterm* mcrl2_aterm_create(const detail::_function_symbol& symbol,
     rust::Slice<const detail::_aterm* const> arguments)
 {
-  rust::Slice<aterm> aterm_slice(const_cast<aterm*>(reinterpret_cast<const aterm*>(arguments.data())),
+  rust::Slice<aterm> aterm_slice(const_cast<aterm*>(layout_cast<const aterm>(arguments.data())),
       arguments.length());
 
   unprotected_aterm_core result(nullptr);
   atermpp::unprotected_function_symbol tmp_symbol(symbol);
-  make_term_appl(reinterpret_cast<aterm&>(result),
-      reinterpret_cast<const function_symbol&>(tmp_symbol),
+  make_term_appl(layout_cast<aterm>(result),
+      layout_cast<const function_symbol>(tmp_symbol),
       aterm_slice.begin(),
       aterm_slice.end());
-  return detail::address(result);
-  return 0;
+  const detail::_aterm* address = detail::address(result);
+  MCRL2_ASSERT(address != nullptr);
+  return address;
 }
 
 inline const detail::_aterm* mcrl2_aterm_create_int(std::uint64_t value)
 {
   atermpp::unprotected_aterm_core result(nullptr);
-  make_aterm_int(reinterpret_cast<aterm_int&>(result), static_cast<std::size_t>(value));
-  return detail::address(result);
+  make_aterm_int(layout_cast<aterm_int>(result), static_cast<std::size_t>(value));
+  const detail::_aterm* address = detail::address(result);
+  MCRL2_ASSERT(address != nullptr);
+  return address;
 }
 
 inline std::unique_ptr<aterm> mcrl2_aterm_from_string(rust::Str text)

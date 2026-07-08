@@ -97,6 +97,9 @@ rust::String mcrl2_pbes_expression_to_string(const atermpp::detail::_aterm& expr
 
 class stategraph_algorithm : private detail::stategraph_local_algorithm
 {
+  // WARNING: This derives privately from the internal
+  // `detail::stategraph_local_algorithm` so that it can reach into its
+  // protected member and run only a subset of the algorithm).
   using super = detail::stategraph_local_algorithm;
 public:
 
@@ -150,6 +153,8 @@ std::size_t mcrl2_local_control_flow_graph_vertices(const detail::local_control_
 inline
 const detail::local_control_flow_graph_vertex& mcrl2_local_control_flow_graph_vertex(const detail::local_control_flow_graph& cfg, std::size_t index)
 {
+  // NOTE: `cfg.vertices` is a node-based set without random access, so we have
+  // to walk it to reach the `index`-th vertex.
   for (auto it = cfg.vertices.begin(); it != cfg.vertices.end(); ++it)
   {
     if (std::distance(cfg.vertices.begin(), it) == static_cast<std::ptrdiff_t>(index))

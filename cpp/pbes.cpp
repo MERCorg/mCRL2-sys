@@ -59,6 +59,11 @@ std::unique_ptr<atermpp::aterm> mcrl2_pbes_expression_replace_propositional_vari
         std::vector<data::data_expression> new_parameters(v.parameters().size());
         for (std::size_t i = 0; i < v.parameters().size(); ++i)
         {
+          if (i >= pi.size())
+          {
+            throw mcrl2::runtime_error("Index out of bounds in replace_propositional_variables");
+          }
+
           new_parameters[pi[i]] = data::data_expression(*std::next(v.parameters().begin(), i));
         }
         return propositional_variable_instantiation(v.name(), data::data_expression_list(new_parameters));
