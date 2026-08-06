@@ -86,6 +86,35 @@ rust::String mcrl2_pbes_to_string(const pbes& pbesspec)
   return ss.str();
 }
 
+// mcrl2::pbes_system::pbes_equation
+
+inline
+void mcrl2_pbes_equations(std::vector<pbes_equation>& result, const pbes& pbesspec)
+{
+  for (const auto& eqn : pbesspec.equations())
+  {
+    result.push_back(eqn);
+  }
+}
+
+inline
+bool mcrl2_pbes_equation_is_mu(const pbes_equation& equation)
+{
+  return equation.symbol() == fixpoint_symbol::mu();
+}
+
+inline
+const atermpp::detail::_aterm* mcrl2_pbes_equation_variable(const pbes_equation& equation)
+{
+  return atermpp::detail::address(equation.variable());
+}
+
+inline
+const atermpp::detail::_aterm* mcrl2_pbes_equation_formula(const pbes_equation& equation)
+{
+  return atermpp::detail::address(equation.formula());
+}
+
 inline
 rust::String mcrl2_pbes_expression_to_string(const atermpp::detail::_aterm& expr)
 {
@@ -230,6 +259,12 @@ std::unique_ptr<srf_pbes> mcrl2_pbes_to_srf_pbes(const pbes& p)
 
 inline
 void mcrl2_srf_pbes_unify_parameters(srf_pbes& p, bool ignore_ce_equations, bool reset)
+{
+  unify_parameters(p, ignore_ce_equations, reset);
+}
+
+inline
+void mcrl2_pbes_unify_parameters(pbes& p, bool ignore_ce_equations, bool reset)
 {
   unify_parameters(p, ignore_ce_equations, reset);
 }

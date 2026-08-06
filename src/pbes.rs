@@ -40,6 +40,20 @@ pub mod ffi {
 
         fn mcrl2_pbes_data_specification(input: &pbes) -> UniquePtr<data_specification>;
 
+        type pbes_equation;
+
+        /// Returns the equations of the given pbes, in declaration order.
+        fn mcrl2_pbes_equations(result: Pin<&mut CxxVector<pbes_equation>>, input: &pbes);
+
+        /// Returns true when the equation has a least fixed-point (mu) symbol.
+        fn mcrl2_pbes_equation_is_mu(equation: &pbes_equation) -> bool;
+
+        /// Returns the bound predicate variable (name and parameters) of the equation.
+        fn mcrl2_pbes_equation_variable(equation: &pbes_equation) -> *const _aterm;
+
+        /// Returns the right-hand side predicate formula of the equation.
+        fn mcrl2_pbes_equation_formula(equation: &pbes_equation) -> *const _aterm;
+
         type stategraph_algorithm;
 
         /// Run the state graph algorithm and obtain the result.
@@ -154,6 +168,13 @@ pub mod ffi {
         /// newly introduced parameters to a default value.
         fn mcrl2_srf_pbes_unify_parameters(
             input: Pin<&mut srf_pbes>,
+            ignore_ce_equations: bool,
+            reset: bool,
+        );
+
+        /// Directly unify all parameters of a pbes without converting to SRF first.
+        fn mcrl2_pbes_unify_parameters(
+            input: Pin<&mut pbes>,
             ignore_ce_equations: bool,
             reset: bool,
         );

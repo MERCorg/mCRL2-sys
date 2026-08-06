@@ -64,5 +64,16 @@ pub mod ffi {
 
         fn mcrl2_data_expression_to_string(input: &_aterm) -> String;
         fn mcrl2_sort_expression_to_string(input: &_aterm) -> String;
+
+        /// Returns the user-defined sorts of the data specification as an aterm_list.
+        fn mcrl2_data_specification_user_defined_sorts(spec: &data_specification) -> UniquePtr<aterm>;
+        /// Returns the user-defined aliases of the data specification as an aterm_list.
+        fn mcrl2_data_specification_user_defined_aliases(spec: &data_specification) -> UniquePtr<aterm>;
+        /// Returns the user-defined constructors of the data specification as an aterm_list.
+        fn mcrl2_data_specification_user_defined_constructors(spec: &data_specification) -> UniquePtr<aterm>;
+        /// Returns the user-defined mappings of the data specification as an aterm_list.
+        fn mcrl2_data_specification_user_defined_mappings(spec: &data_specification) -> UniquePtr<aterm>;
+        /// Returns the user-defined equations of the data specification as an aterm_list.
+        fn mcrl2_data_specification_user_defined_equations(spec: &data_specification) -> UniquePtr<aterm>;
     }
 }
