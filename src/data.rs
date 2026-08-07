@@ -1,7 +1,13 @@
 #[cxx::bridge(namespace = "mcrl2::data")]
 pub mod ffi {
 
-    /// A helper struct for std::pair<pbes_expression, pbes_expression>>
+    /// A helper struct for a single substitution entry, where `lhs` is a
+    /// data::variable and `rhs` the data::data_expression replacing it.
+    ///
+    /// NOTE: An identical struct is declared in the `pbes` bridge (see
+    /// `src/pbes.rs`). A shared type cannot be used here since `cxx` generates
+    /// the definition per bridge module, so both declarations must be kept in
+    /// sync.
     struct assignment_pair {
         pub lhs: *const _aterm,
         pub rhs: *const _aterm,

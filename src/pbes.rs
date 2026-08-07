@@ -1,3 +1,10 @@
+/// Raw bindings to the PBES library of the mCRL2 toolset.
+///
+/// The accessors returning `*const _aterm` yield unprotected addresses of terms
+/// owned by the object they were obtained from, and are non-null as long as
+/// that object is alive. They follow the contract described in
+/// [`crate::atermpp`]: the term must be protected before it can outlive the
+/// current shared section or its owner.
 #[cxx::bridge(namespace = "mcrl2::pbes_system")]
 pub mod ffi {
     /// A helper struct for std::pair<const local_control_flow_graph_vertex*, UniquePtr<CxxVector<usize>>>
@@ -7,7 +14,13 @@ pub mod ffi {
         edges: UniquePtr<CxxVector<usize>>,
     }
 
-    /// A helper struct for std::pair<pbes_expression, pbes_expression>>
+    /// A helper struct for a single substitution entry, where `lhs` is a
+    /// data::variable and `rhs` the data::data_expression replacing it.
+    ///
+    /// NOTE: An identical struct is declared in the `data` bridge (see
+    /// `src/data.rs`). A shared type cannot be used here since `cxx` generates
+    /// the definition per bridge module, so both declarations must be kept in
+    /// sync.
     struct assignment_pair {
         pub lhs: *const _aterm,
         pub rhs: *const _aterm,
@@ -109,6 +122,9 @@ pub mod ffi {
         ) -> UniquePtr<CxxVector<predicate_variable>>;
 
         fn mcrl2_pbes_is_propositional_variable(expression: &_aterm) -> bool;
+
+        /// Pretty-prints a propositional variable using the mCRL2 pretty printer.
+        fn mcrl2_propositional_variable_to_string(variable: &_aterm) -> String;
 
         /// Returns the propositional variable of a pbes equation
         fn mcrl2_stategraph_equation_variable(equation: &stategraph_equation) -> *const _aterm;

@@ -10,12 +10,17 @@ namespace mcrl2::pbes_system
 
 std::unique_ptr<std::vector<vertex_outgoing_edge>> mcrl2_local_control_flow_graph_vertex_outgoing_edges(const detail::local_control_flow_graph_vertex& vertex)
 {
+  // The edges are stored in node based containers that cxx cannot expose
+  // directly, so they are copied into vectors here. Reserve up front such that
+  // this costs one allocation per (inner) vector.
   std::vector<vertex_outgoing_edge> result;
+  result.reserve(vertex.outgoing_edges().size());
   for (const auto& edge : vertex.outgoing_edges())
   {
     vertex_outgoing_edge voe;
     voe.vertex = edge.first;
     voe.edges = std::make_unique<std::vector<std::size_t>>();
+    voe.edges->reserve(edge.second.size());
     for (const auto& e : edge.second)
     {
       voe.edges->emplace_back(e);
@@ -58,15 +63,24 @@ std::unique_ptr<atermpp::aterm> mcrl2_pbes_expression_replace_propositional_vari
       {
         const std::size_t num_parameters = v.parameters().size();
         std::vector<data::data_expression> new_parameters(num_parameters);
+        // pi must be a permutation of the parameter positions: every source
+        // position maps to a distinct valid target position. Otherwise the
+        // write into new_parameters[pi[i]] would go out of bounds, or leave
+        // some entries default constructed (an unassigned term) because a
+        // target position was written twice.
+        std::vector<bool> assigned(num_parameters, false);
         for (std::size_t i = 0; i < num_parameters; ++i)
         {
-          // pi must map every source position to a distinct valid target
-          // position, so both the read of pi[i] and the write into
-          // new_parameters[pi[i]] stay in bounds.
           if (i >= pi.size() || pi[i] >= num_parameters)
           {
             throw mcrl2::runtime_error("Index out of bounds in replace_propositional_variables");
           }
+
+          if (assigned[pi[i]])
+          {
+            throw mcrl2::runtime_error("Duplicate target index in replace_propositional_variables");
+          }
+          assigned[pi[i]] = true;
 
           new_parameters[pi[i]] = data::data_expression(*std::next(v.parameters().begin(), i));
         }

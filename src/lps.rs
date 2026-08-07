@@ -144,6 +144,14 @@ pub mod ffi {
         /// Like `mcrl2_lps_enumerate`, but additionally passes the
         /// summation-variable solution slice to the callback for each solution.
         /// The solution can be cached and replayed via `mcrl2_lps_compute_successor`.
+        ///
+        /// # Safety
+        /// 
+        /// As for `mcrl2_lps_enumerate`: every `&[*const _aterm]` slice and the
+        /// `*const _aterm` multi-action pointer passed to `callback` are only
+        /// valid for the duration of that call. The callback must copy/protect
+        /// anything it needs to keep, and must not retain the raw pointers past
+        /// its return.
         unsafe fn mcrl2_lps_enumerate_solutions(
             context: Pin<&mut learn_successors_context>,
             condition: &_aterm,
@@ -158,6 +166,13 @@ pub mod ffi {
         /// summation-variable solution, without re-enumerating the condition.
         /// The current substitution is expected to already contain the
         /// read-parameter assignments of the source state.
+        ///
+        /// # Safety
+        /// 
+        /// The `summation_values` terms must be alive (protected) for the
+        /// duration of the call. As for `mcrl2_lps_enumerate`, the
+        /// `&[*const _aterm]` slice and the `*const _aterm` multi-action pointer
+        /// passed to `callback` are only valid for the duration of that call.
         unsafe fn mcrl2_lps_compute_successor(
             context: Pin<&mut learn_successors_context>,
             summation_variables: &_aterm,

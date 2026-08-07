@@ -1,3 +1,28 @@
+/// Raw bindings to the atermpp library of the mCRL2 toolset.
+///
+/// # Safety
+/// 
+/// The functions below share a single contract that individual `# Safety`
+/// notes only refine, since the underlying term pool is global mutable state:
+///
+/// - `*const _aterm` and `*const _function_symbol` are unprotected raw
+///   addresses into the global term pool. They are never null for the
+///   functions returning them, but they keep no term alive by themselves.
+/// - A term returned by (or passed to) these functions is only guaranteed to
+///   stay alive until the next garbage collection. Terms created here must be
+///   protected before the calling thread leaves its shared section (see
+///   `mcrl2_aterm_pool_lock_shared` / `mcrl2_aterm_pool_unlock_shared`), or
+///   before any other thread can trigger a collection.
+/// - Garbage collection and hash table resizing require every thread to be
+///   outside of a shared section. Calling into the pool while holding the busy
+///   flags (or recursively locking) deadlocks; see the per-function warnings.
+/// - Mark callbacks registered with `mcrl2_aterm_pool_register_mark_callback`
+///   are invoked from whichever thread performs the collection, so they must
+///   only touch data that is safe to read at that point.
+///
+/// The `mcrl2` crate wraps these functions into safe abstractions
+/// (`ATerm`, `ATermRef`, protection sets); prefer those over calling this
+/// bridge directly.
 #[cxx::bridge(namespace = "atermpp")]
 pub mod ffi {
     unsafe extern "C++" {

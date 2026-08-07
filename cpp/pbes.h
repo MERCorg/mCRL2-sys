@@ -424,11 +424,12 @@ bool mcrl2_pbes_is_propositional_variable(const atermpp::detail::_aterm& variabl
 }
 
 inline
-rust::String mcrl2_propositional_variable_to_string(const atermpp::aterm& variable)
+rust::String mcrl2_propositional_variable_to_string(const atermpp::detail::_aterm& variable)
 {
-  MCRL2_ASSERT(pbes_system::is_propositional_variable(variable));
+  atermpp::unprotected_aterm_core tmp(&variable);
+  MCRL2_ASSERT(pbes_system::is_propositional_variable(atermpp::down_cast<atermpp::aterm>(tmp)));
   std::stringstream ss;
-  ss << atermpp::down_cast<propositional_variable>(variable);
+  ss << atermpp::down_cast<propositional_variable>(tmp);
   return ss.str();
 }
 
