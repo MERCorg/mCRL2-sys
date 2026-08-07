@@ -131,7 +131,7 @@ inline void mcrl2_aterm_pool_resize()
 
 inline void mcrl2_aterm_pool_lock_shared()
 {
-  detail::g_thread_term_pool().shared_mutex().lock_shared_impl();
+  detail::g_thread_term_pool().shared_mutex().lock_shared();
 }
 
 inline bool mcrl2_aterm_pool_unlock_shared()
@@ -142,7 +142,7 @@ inline bool mcrl2_aterm_pool_unlock_shared()
 
 inline void mcrl2_aterm_pool_lock_exclusive()
 {
-  detail::g_thread_term_pool().shared_mutex().lock_impl();
+  detail::g_thread_term_pool().shared_mutex().lock();
 }
 
 inline void mcrl2_aterm_pool_unlock_exclusive()
