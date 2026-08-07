@@ -5,11 +5,14 @@
 #include "mcrl2/atermpp/aterm.h"
 #include "mcrl2/data/data_specification.h"
 #include "mcrl2/data/assignment.h"
+#include "mcrl2/data/rewriter.h"
+#include "mcrl2/data/substitutions/mutable_indexed_substitution.h"
 #include "mcrl2/pbes/detail/stategraph_local_algorithm.h"
 #include "mcrl2/pbes/detail/stategraph_pbes.h"
 #include "mcrl2/pbes/io.h"
 #include "mcrl2/pbes/pbes.h"
 #include "mcrl2/pbes/propositional_variable.h"
+#include "mcrl2/pbes/rewriters/enumerate_quantifiers_rewriter.h"
 #include "mcrl2/pbes/srf_pbes.h"
 #include "mcrl2/pbes/unify_parameters.h"
 
@@ -28,6 +31,49 @@ namespace mcrl2::pbes_system
 
 /// Alias for templated type.
 using srf_equation = detail::pre_srf_equation<false>;
+
+/// Holds an enumerate_quantifiers_rewriter and a substitution used per-call.
+struct pbes_rewrite_context
+{
+  data::data_specification m_dataspec;
+  data::rewriter           m_datar;
+  enumerate_quantifiers_rewriter m_R;
+  data::mutable_indexed_substitution<> m_sigma;
+  pbes_expression m_result; // keeps the rewritten term alive between FFI calls
+
+  explicit pbes_rewrite_context(const data::data_specification& ds)
+    : m_dataspec(ds), m_datar(ds), m_R(m_datar, ds)
+  {}
+};
+
+inline
+std::unique_ptr<pbes_rewrite_context>
+mcrl2_pbes_create_rewrite_context(const data::data_specification& dataspec)
+{
+  return std::make_unique<pbes_rewrite_context>(dataspec);
+}
+
+inline
+void mcrl2_pbes_rewrite_set_assignments(
+    pbes_rewrite_context& ctx,
+    rust::Slice<const atermpp::detail::_aterm* const> variables,
+    rust::Slice<const atermpp::detail::_aterm* const> values)
+{
+  ctx.m_sigma.clear();
+  for (std::size_t i = 0; i < variables.size(); ++i)
+  {
+    atermpp::unprotected_aterm_core tmp_var(variables[i]);
+    atermpp::unprotected_aterm_core tmp_val(values[i]);
+    ctx.m_sigma[atermpp::down_cast<data::variable>(tmp_var)]
+        = atermpp::down_cast<data::data_expression>(tmp_val);
+  }
+}
+
+/// Rewrites formula under ctx.m_sigma; result kept alive in ctx.m_result.
+const atermpp::detail::_aterm*
+mcrl2_pbes_rewrite_formula(
+    pbes_rewrite_context& ctx,
+    const atermpp::detail::_aterm& formula);
 
 // Forward declaration
 struct vertex_outgoing_edge;

@@ -75,4 +75,15 @@ std::unique_ptr<atermpp::aterm> mcrl2_pbes_expression_replace_propositional_vari
   return std::make_unique<atermpp::aterm>(result);
 }
 
+const atermpp::detail::_aterm* mcrl2_pbes_rewrite_formula(
+    pbes_rewrite_context& ctx,
+    const atermpp::detail::_aterm& formula)
+{
+  atermpp::unprotected_aterm_core tmp(&formula);
+  ctx.m_R(ctx.m_result,
+          atermpp::down_cast<pbes_expression>(tmp),
+          ctx.m_sigma);
+  return atermpp::detail::address(ctx.m_result);
+}
+
 } // namespace mcrl2::pbes_system

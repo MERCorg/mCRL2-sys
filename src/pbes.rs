@@ -17,6 +17,23 @@ pub mod ffi {
         include!("mcrl2-sys/cpp/pbes.h");
         include!("mcrl2-sys/cpp/exception.h");
 
+        type pbes_rewrite_context;
+
+        fn mcrl2_pbes_create_rewrite_context(
+            dataspec: &data_specification,
+        ) -> UniquePtr<pbes_rewrite_context>;
+
+        fn mcrl2_pbes_rewrite_set_assignments(
+            ctx: Pin<&mut pbes_rewrite_context>,
+            variables: &[*const _aterm],
+            values: &[*const _aterm],
+        );
+
+        unsafe fn mcrl2_pbes_rewrite_formula(
+            ctx: Pin<&mut pbes_rewrite_context>,
+            formula: &_aterm,
+        ) -> *const _aterm;
+
         type pbes;
 
         type srf_summand;
