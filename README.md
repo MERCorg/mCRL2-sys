@@ -22,6 +22,24 @@ helpers for standard functionality such as `std::unique_ptr`. The resulting
 interface is generally unpleasant to work with so the crate `mcrl2` has Rust
 wrappers around the resulting functionality.
 
+## Features
+
+  - `cpptrace` — provides stack traces on exceptions and assertions in the mCRL2
+    code, see [Stack traces](#stack-traces) below. Requires `cmake` to be found
+    on `PATH` to build the necessary components.
+  - `jittyc` — compiles the `jittyc` rewriter of mCRL2, which generates C++ code
+    for the rewrite rules at run time and compiles it with the compiler found at
+    run time. Enables `mcrl2_create_rewriter_jittyc`, which is not declared
+    otherwise.
+
+## Native library
+
+This crate declares `links = "mcrl2"`, so at most one version of it can occur in
+a dependency graph and it owns the linking of the (statically built) mCRL2
+sources. The build script emits no `cargo::metadata=` keys, so there are no
+`DEP_MCRL2_*` variables for downstream build scripts to read; everything needed
+to use the toolset is exposed through the `cxx` bridges in `src/`.
+
 ## Stack traces
 
 The `cpptrace` feature can be enabled to provide stack traces on exceptions and
