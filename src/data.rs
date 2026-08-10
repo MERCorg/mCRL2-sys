@@ -22,6 +22,23 @@ pub mod ffi {
         /// Creates a data specification from the given string.
         fn mcrl2_data_specification_from_string(input: &str) -> UniquePtr<data_specification>;
 
+        /// Returns the user-declared sorts as an aterm list of basic sorts.
+        fn mcrl2_data_specification_user_defined_sorts(specification: &data_specification) -> UniquePtr<aterm>;
+
+        /// Returns the user-declared sort aliases as an aterm list of aliases.
+        fn mcrl2_data_specification_user_defined_aliases(specification: &data_specification) -> UniquePtr<aterm>;
+
+        /// Returns the user-declared constructors as an aterm list of function symbols.
+        fn mcrl2_data_specification_user_defined_constructors(
+            specification: &data_specification,
+        ) -> UniquePtr<aterm>;
+
+        /// Returns the user-declared mappings as an aterm list of function symbols.
+        fn mcrl2_data_specification_user_defined_mappings(specification: &data_specification) -> UniquePtr<aterm>;
+
+        /// Returns the user-declared equations as an aterm list of data equations.
+        fn mcrl2_data_specification_user_defined_equations(specification: &data_specification) -> UniquePtr<aterm>;
+
         #[namespace = "mcrl2::data::detail"]
         type RewriterJitty;
 
