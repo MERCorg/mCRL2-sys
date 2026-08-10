@@ -193,6 +193,9 @@ pub mod ffi {
         /// Returns PBES as a string.
         fn mcrl2_pbes_to_string(input: &pbes) -> String;
 
+        /// Returns a deep copy of the PBES.
+        fn mcrl2_pbes_clone(input: &pbes) -> UniquePtr<pbes>;
+
         /// Convert a SRF PBES to a PBES.
         fn mcrl2_srf_pbes_to_pbes(input: &srf_pbes) -> UniquePtr<pbes>;
 
@@ -266,5 +269,8 @@ pub mod ffi {
         fn mcrl2_pbes_is_imp(term: &_aterm) -> bool;
         fn mcrl2_pbes_is_forall(term: &_aterm) -> bool;
         fn mcrl2_pbes_is_exists(term: &_aterm) -> bool;
+
+        fn mcrl2_pbes_is_true(term: &_aterm) -> bool;
+        fn mcrl2_pbes_is_false(term: &_aterm) -> bool;
     }
 }

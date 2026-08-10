@@ -132,6 +132,12 @@ rust::String mcrl2_pbes_to_string(const pbes& pbesspec)
   return ss.str();
 }
 
+inline
+std::unique_ptr<pbes> mcrl2_pbes_clone(const pbes& p)
+{
+  return std::make_unique<pbes>(p);
+}
+
 // mcrl2::pbes_system::pbes_equation
 
 inline
@@ -559,6 +565,20 @@ bool mcrl2_pbes_is_exists(const atermpp::detail::_aterm& variable)
 {
   atermpp::unprotected_aterm_core tmp(&variable);
   return pbes_system::is_exists(atermpp::down_cast<atermpp::aterm>(tmp));
+}
+
+inline
+bool mcrl2_pbes_is_true(const atermpp::detail::_aterm& variable)
+{
+  atermpp::unprotected_aterm_core tmp(&variable);
+  return pbes_system::is_true(atermpp::down_cast<pbes_expression>(tmp));
+}
+
+inline
+bool mcrl2_pbes_is_false(const atermpp::detail::_aterm& variable)
+{
+  atermpp::unprotected_aterm_core tmp(&variable);
+  return pbes_system::is_false(atermpp::down_cast<pbes_expression>(tmp));
 }
 
 } // namespace mcrl2::pbes_system
