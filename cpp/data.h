@@ -3,7 +3,6 @@
 #ifndef MCRL2_SYS_CPP_DATA_H
 #define MCRL2_SYS_CPP_DATA_H
 
-#include "mcrl2/atermpp/algorithm.h"
 #include "mcrl2/atermpp/aterm.h"
 #include "mcrl2/atermpp/aterm_string.h"
 #include "mcrl2/atermpp/algorithm.h"
@@ -172,67 +171,6 @@ rust::String mcrl2_sort_expression_to_string(const atermpp::detail::_aterm& inpu
 {
   atermpp::unprotected_aterm_core tmp(&input);
   return data::pp(atermpp::down_cast<data::sort_expression>(tmp));
-}
-
-/// Rewrites a single `OpId(name, sort, index)` into `OpIdNoIndex(name, sort)`.
-///
-/// This mirrors `remove_index_impl` in mCRL2's `data/source/data_io.cpp`, which
-/// is `static` there and so cannot be reused. The index is a process-local
-/// lookup number rather than part of the term's identity, so it must be dropped
-/// before terms can be compared against an implementation that never assigns one.
-inline atermpp::aterm mcrl2_remove_op_id_index(const atermpp::aterm& term)
-{
-  if (term.function() == core::detail::function_symbol_OpId())
-  {
-    return atermpp::aterm(core::detail::function_symbol_OpIdNoIndex(), term.begin(), --term.end());
-  }
-
-  return term;
-}
-
-/// Wraps a vector of aterm-derived declarations into an owned aterm_list.
-///
-/// The `user_defined_*` accessors below all return a `std::vector` of some
-/// aterm subclass. cxx cannot express those vectors, so each is converted into
-/// a maximally shared `aterm_list` and handed to Rust as a single term. The
-/// list is returned in the serialised (index-stripped) form, which is the shape
-/// terms have when they are written out, and the only shape that is comparable
-/// across implementations.
-template <typename Container>
-inline std::unique_ptr<atermpp::aterm> mcrl2_declarations_to_aterm_list(const Container& declarations)
-{
-  atermpp::aterm_list list(declarations.begin(), declarations.end());
-  return std::make_unique<atermpp::aterm>(atermpp::bottom_up_replace(list, mcrl2_remove_op_id_index));
-}
-
-inline
-std::unique_ptr<atermpp::aterm> mcrl2_data_specification_user_defined_sorts(const data_specification& specification)
-{
-  return mcrl2_declarations_to_aterm_list(specification.user_defined_sorts());
-}
-
-inline
-std::unique_ptr<atermpp::aterm> mcrl2_data_specification_user_defined_aliases(const data_specification& specification)
-{
-  return mcrl2_declarations_to_aterm_list(specification.user_defined_aliases());
-}
-
-inline
-std::unique_ptr<atermpp::aterm> mcrl2_data_specification_user_defined_constructors(const data_specification& specification)
-{
-  return mcrl2_declarations_to_aterm_list(specification.user_defined_constructors());
-}
-
-inline
-std::unique_ptr<atermpp::aterm> mcrl2_data_specification_user_defined_mappings(const data_specification& specification)
-{
-  return mcrl2_declarations_to_aterm_list(specification.user_defined_mappings());
-}
-
-inline
-std::unique_ptr<atermpp::aterm> mcrl2_data_specification_user_defined_equations(const data_specification& specification)
-{
-  return mcrl2_declarations_to_aterm_list(specification.user_defined_equations());
 }
 
 /// Returns the user-defined sorts of the data specification as an aterm_list.
