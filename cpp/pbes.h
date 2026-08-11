@@ -6,6 +6,7 @@
 #include "mcrl2/data/data_specification.h"
 #include "mcrl2/data/assignment.h"
 #include "mcrl2/data/rewriter.h"
+#include "mcrl2/data/substitution_utility.h"
 #include "mcrl2/data/substitutions/mutable_indexed_substitution.h"
 #include "mcrl2/pbes/detail/stategraph_local_algorithm.h"
 #include "mcrl2/pbes/detail/stategraph_pbes.h"
@@ -15,9 +16,11 @@
 #include "mcrl2/pbes/rewriters/enumerate_quantifiers_rewriter.h"
 #include "mcrl2/pbes/srf_pbes.h"
 #include "mcrl2/pbes/unify_parameters.h"
+#include "mcrl2/utilities/exception.h"
 
 #include "mcrl2-sys/cpp/assert.h"
 #include "mcrl2-sys/cpp/atermpp.h"
+#include "mcrl2-sys/cpp/data.h" // for the mcrl2::data::assignment_pair declaration.
 #include "rust/cxx.h"
 
 #include <cstddef>
@@ -33,16 +36,22 @@ namespace mcrl2::pbes_system
 using srf_equation = detail::pre_srf_equation<false>;
 
 /// Holds an enumerate_quantifiers_rewriter and a substitution used per-call.
+///
+/// Both `data::rewriter` and `enumerate_quantifiers_rewriter` store their own
+/// copy of the data specification, so no member is needed to keep the
+/// specification passed to the constructor alive.
 struct pbes_rewrite_context
 {
-  data::data_specification m_dataspec;
   data::rewriter           m_datar;
   enumerate_quantifiers_rewriter m_R;
   data::mutable_indexed_substitution<> m_sigma;
+  /// The variables assigned by the last mcrl2_pbes_rewrite_set_assignments
+  /// call, so that exactly those can be removed from m_sigma again.
+  std::vector<data::variable> m_assigned;
   pbes_expression m_result; // keeps the rewritten term alive between FFI calls
 
   explicit pbes_rewrite_context(const data::data_specification& ds)
-    : m_dataspec(ds), m_datar(ds), m_R(m_datar, ds)
+    : m_datar(ds), m_R(m_datar, ds)
   {}
 };
 
@@ -59,13 +68,26 @@ void mcrl2_pbes_rewrite_set_assignments(
     rust::Slice<const atermpp::detail::_aterm* const> variables,
     rust::Slice<const atermpp::detail::_aterm* const> values)
 {
-  ctx.m_sigma.clear();
+  // rust::Slice::operator[] is only assert checked, and NDEBUG is defined for
+  // release builds, so without this the loop below would read past `values`.
+  if (variables.size() != values.size())
+  {
+    throw mcrl2::runtime_error("mcrl2_pbes_rewrite_set_assignments requires as many values as variables");
+  }
+
+  // Undo the previous assignment instead of calling m_sigma.clear().
+  data::remove_assignments(ctx.m_sigma, ctx.m_assigned);
+  ctx.m_assigned.clear();
+  ctx.m_assigned.reserve(variables.size());
+
   for (std::size_t i = 0; i < variables.size(); ++i)
   {
     atermpp::unprotected_aterm_core tmp_var(variables[i]);
     atermpp::unprotected_aterm_core tmp_val(values[i]);
-    ctx.m_sigma[atermpp::down_cast<data::variable>(tmp_var)]
-        = atermpp::down_cast<data::data_expression>(tmp_val);
+    const data::variable& variable = atermpp::down_cast<data::variable>(tmp_var);
+
+    ctx.m_sigma[variable] = atermpp::down_cast<data::data_expression>(tmp_val);
+    ctx.m_assigned.push_back(variable);
   }
 }
 
@@ -77,7 +99,6 @@ mcrl2_pbes_rewrite_formula(
 
 // Forward declaration
 struct vertex_outgoing_edge;
-struct assignment_pair;
 
 // mcrl2::pbes_system::pbes
 
@@ -143,6 +164,10 @@ std::unique_ptr<pbes> mcrl2_pbes_clone(const pbes& p)
 inline
 void mcrl2_pbes_equations(std::vector<pbes_equation>& result, const pbes& pbesspec)
 {
+  // equations() is a std::vector, so the size is known up front and copying the
+  // equations costs one allocation instead of log(N) reallocations that each
+  // relocate every aterm member copied so far.
+  result.reserve(result.size() + pbesspec.equations().size());
   for (const auto& eqn : pbesspec.equations())
   {
     result.push_back(eqn);
@@ -235,9 +260,11 @@ inline
 const detail::local_control_flow_graph_vertex& mcrl2_local_control_flow_graph_vertex(const detail::local_control_flow_graph& cfg, std::size_t index)
 {
   // NOTE: `cfg.vertices` is a node-based set without random access, so we have
-  // to walk it to reach the `index`-th vertex. Advance a single iterator (O(index))
-  // rather than recomputing std::distance for every element (which would be
-  // O(index^2) and O(n^2) when iterating all vertices from the Rust side).
+  // to walk it to reach the `index`-th vertex. Advance a single iterator
+  // (O(index)) rather than recomputing std::distance for every element, which
+  // would make this O(index^2). Enumerating all vertices one by one from the
+  // Rust side is still O(n^2) node hops; a bulk accessor would be needed to
+  // avoid that.
   if (index >= cfg.vertices.size())
   {
     throw std::out_of_range("Index out of range in mcrl2_local_control_flow_graph_vertex");
@@ -327,6 +354,7 @@ inline
 std::unique_ptr<std::vector<detail::predicate_variable>> mcrl2_stategraph_equation_predicate_variables(const detail::stategraph_equation& eqn)
 {
   std::vector<detail::predicate_variable> result;
+  result.reserve(eqn.predicate_variables().size());
   for (const auto& v : eqn.predicate_variables())
   {
     result.push_back(v);
@@ -408,6 +436,7 @@ std::unique_ptr<pbes> mcrl2_srf_pbes_to_pbes(const srf_pbes& p)
 inline
 void mcrl2_srf_pbes_equations(std::vector<srf_equation>& result, const srf_pbes& p)
 {
+  result.reserve(result.size() + p.equations().size());
   for (const auto& eqn : p.equations())
   {
     result.push_back(eqn);
@@ -442,6 +471,7 @@ rust::String mcrl2_propositional_variable_to_string(const atermpp::detail::_ater
 inline
 void mcrl2_srf_equations_summands(std::vector<srf_summand>& result, const srf_equation& equation)
 {
+  result.reserve(result.size() + equation.summands().size());
   for (const auto& summand : equation.summands())
   {
     result.push_back(summand);
@@ -505,7 +535,10 @@ std::unique_ptr<atermpp::aterm> mcrl2_make_data_assignment_list(
   return std::make_unique<atermpp::aterm>(data::make_assignment_list(vars, vals));
 }
 
-std::unique_ptr<atermpp::aterm> mcrl2_pbes_expression_replace_variables(const atermpp::detail::_aterm& expr, const rust::Vec<assignment_pair>& sigma);
+/// Note that the substitution uses mcrl2::data::assignment_pair, which is
+/// declared by the data bridge (src/data.rs); this function is declared there
+/// too so that both bridges share a single Rust type.
+std::unique_ptr<atermpp::aterm> mcrl2_pbes_expression_replace_variables(const atermpp::detail::_aterm& expr, const rust::Vec<data::assignment_pair>& sigma);
 
 std::unique_ptr<atermpp::aterm> mcrl2_pbes_expression_replace_propositional_variables(const atermpp::detail::_aterm& expr, const rust::Vec<std::size_t>& pi);
 

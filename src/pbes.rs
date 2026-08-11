@@ -5,6 +5,14 @@
 /// that object is alive. They follow the contract described in
 /// [`crate::atermpp`]: the term must be protected before it can outlive the
 /// current shared section or its owner.
+///
+/// The same contract applies in the other direction: an `&_aterm` argument is
+/// also an unprotected address, so the caller must hold a protection for that
+/// term for the duration of the call. The pretty printers below
+/// (`mcrl2_pbes_expression_to_string`, `mcrl2_propositional_variable_to_string`)
+/// allocate while walking the term, so unlike the plain recognisers they can
+/// trigger a collection themselves and an unprotected argument may be reclaimed
+/// mid-call.
 #[cxx::bridge(namespace = "mcrl2::pbes_system")]
 pub mod ffi {
     /// A helper struct for std::pair<const local_control_flow_graph_vertex*, UniquePtr<CxxVector<usize>>>
@@ -12,18 +20,6 @@ pub mod ffi {
     struct vertex_outgoing_edge {
         vertex: *const local_control_flow_graph_vertex,
         edges: UniquePtr<CxxVector<usize>>,
-    }
-
-    /// A helper struct for a single substitution entry, where `lhs` is a
-    /// data::variable and `rhs` the data::data_expression replacing it.
-    ///
-    /// NOTE: An identical struct is declared in the `data` bridge (see
-    /// `src/data.rs`). A shared type cannot be used here since `cxx` generates
-    /// the definition per bridge module, so both declarations must be kept in
-    /// sync.
-    struct assignment_pair {
-        pub lhs: *const _aterm,
-        pub rhs: *const _aterm,
     }
 
     unsafe extern "C++" {
@@ -34,18 +30,26 @@ pub mod ffi {
 
         fn mcrl2_pbes_create_rewrite_context(
             dataspec: &data_specification,
-        ) -> UniquePtr<pbes_rewrite_context>;
+        ) -> Result<UniquePtr<pbes_rewrite_context>>;
 
+        /// Sets the substitution used by the next `mcrl2_pbes_rewrite_formula`
+        /// call. Returns an error when `variables` and `values` differ in
+        /// length.
         fn mcrl2_pbes_rewrite_set_assignments(
             ctx: Pin<&mut pbes_rewrite_context>,
             variables: &[*const _aterm],
             values: &[*const _aterm],
-        );
+        ) -> Result<()>;
 
+        /// Rewrites the formula under the substitution set previously.
+        ///
+        /// This runs the quantifier enumerator, which reports unsolvable
+        /// quantifiers (for example over a function sort, or over an infinite
+        /// sort) by throwing, hence the `Result`.
         unsafe fn mcrl2_pbes_rewrite_formula(
             ctx: Pin<&mut pbes_rewrite_context>,
             formula: &_aterm,
-        ) -> *const _aterm;
+        ) -> Result<*const _aterm>;
 
         type pbes;
 
@@ -97,21 +101,24 @@ pub mod ffi {
         /// Get the number of control flow graphs identified by the state graph algorithm.
         fn mcrl2_stategraph_local_algorithm_cfgs(input: &stategraph_algorithm) -> usize;
 
-        /// Returns the control flow graph at the given index.
+        /// Returns the control flow graph at the given index, or an error when
+        /// the index is out of range.
         fn mcrl2_stategraph_local_algorithm_cfg(
             input: &stategraph_algorithm,
             index: usize,
-        ) -> &local_control_flow_graph;
+        ) -> Result<&local_control_flow_graph>;
 
         #[namespace = "mcrl2::pbes_system::detail"]
         type stategraph_equation;
 
         fn mcrl2_stategraph_local_algorithm_equations(input: &stategraph_algorithm) -> usize;
 
+        /// Returns the equation at the given index, or an error when the index
+        /// is out of range.
         fn mcrl2_stategraph_local_algorithm_equation(
             input: &stategraph_algorithm,
             index: usize,
-        ) -> &stategraph_equation;
+        ) -> Result<&stategraph_equation>;
 
         #[namespace = "mcrl2::pbes_system::detail"]
         type predicate_variable;
@@ -155,10 +162,12 @@ pub mod ffi {
         /// Obtain the vertices of a cfg.
         fn mcrl2_local_control_flow_graph_vertices(input: &local_control_flow_graph) -> usize;
 
+        /// Returns the vertex at the given index, or an error when the index is
+        /// out of range.
         fn mcrl2_local_control_flow_graph_vertex(
             input: &local_control_flow_graph,
             index: usize,
-        ) -> &local_control_flow_graph_vertex;
+        ) -> Result<&local_control_flow_graph_vertex>;
 
         #[namespace = "atermpp::detail"]
         type _aterm = crate::atermpp::ffi::_aterm;
@@ -206,14 +215,14 @@ pub mod ffi {
             input: Pin<&mut srf_pbes>,
             ignore_ce_equations: bool,
             reset: bool,
-        );
+        ) -> Result<()>;
 
         /// Directly unify all parameters of a pbes without converting to SRF first.
         fn mcrl2_pbes_unify_parameters(
             input: Pin<&mut pbes>,
             ignore_ce_equations: bool,
             reset: bool,
-        );
+        ) -> Result<()>;
 
         /// Returns the summands of the given srf_equation.
         fn mcrl2_srf_equations_summands(
@@ -247,17 +256,19 @@ pub mod ffi {
         fn mcrl2_make_data_assignment_list(variables: &_aterm, values: &_aterm)
         -> UniquePtr<aterm>;
 
-        /// Replace data variables in a pbes expression according to the given substitutions.
-        fn mcrl2_pbes_expression_replace_variables(
-            expression: &_aterm,
-            substitutions: &Vec<assignment_pair>,
-        ) -> UniquePtr<aterm>;
+        // NOTE: mcrl2_pbes_expression_replace_variables is declared in the data
+        // bridge (`src/data.rs`), so that it can share the `assignment_pair`
+        // struct with the data expression substitution instead of forcing a
+        // second, incompatible copy of it here.
 
-        /// Replace propositional variables in a pbes expression according to the given substitutions.
+        /// Reorders the parameters of every propositional variable
+        /// instantiation in the expression according to the permutation `pi`.
+        /// Returns an error when `pi` is not a permutation of the parameter
+        /// positions of the instantiations that are encountered.
         fn mcrl2_pbes_expression_replace_propositional_variables(
             expression: &_aterm,
             pi: &Vec<usize>,
-        ) -> UniquePtr<aterm>;
+        ) -> Result<UniquePtr<aterm>>;
 
         fn mcrl2_pbes_expression_to_string(expression: &_aterm) -> String;
 

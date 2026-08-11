@@ -20,6 +20,7 @@
 #include "mcrl2/data/enumerator.h"
 #include "mcrl2/data/substitution_utility.h"
 #include "mcrl2/data/substitutions/mutable_indexed_substitution.h"
+#include "mcrl2/utilities/exception.h"
 
 #include "rust/cxx.h"
 #include <mcrl2/data/rewriter.h>
@@ -222,6 +223,13 @@ inline void mcrl2_lps_set_assignments(
     learn_successors_context &context,
     rust::Slice<const atermpp::detail::_aterm *const> variables,
     rust::Slice<const atermpp::detail::_aterm *const> values) {
+  // rust::Slice::operator[] is only assert checked, and NDEBUG is defined for
+  // release builds, so without this the loop below would read past `values`.
+  if (variables.size() != values.size()) {
+    throw mcrl2::runtime_error(
+        "mcrl2_lps_set_assignments requires as many values as variables");
+  }
+
   auto &sigma = context.sigma;
 
   for (std::size_t i = 0; i < variables.size(); i++) {

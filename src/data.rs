@@ -3,11 +3,6 @@ pub mod ffi {
 
     /// A helper struct for a single substitution entry, where `lhs` is a
     /// data::variable and `rhs` the data::data_expression replacing it.
-    ///
-    /// NOTE: An identical struct is declared in the `pbes` bridge (see
-    /// `src/pbes.rs`). A shared type cannot be used here since `cxx` generates
-    /// the definition per bridge module, so both declarations must be kept in
-    /// sync.
     struct assignment_pair {
         pub lhs: *const _aterm,
         pub rhs: *const _aterm,
@@ -15,6 +10,7 @@ pub mod ffi {
 
     unsafe extern "C++" {
         include!("mcrl2-sys/cpp/data.h");
+        include!("mcrl2-sys/cpp/pbes.h");
         include!("mcrl2-sys/cpp/exception.h");
 
         type data_specification;
@@ -46,6 +42,19 @@ pub mod ffi {
 
         /// Replace variables in the given data expression according to the given substitution sigma.
         fn mcrl2_data_expression_replace_variables(
+            input: &_aterm,
+            sigma: &Vec<assignment_pair>,
+        ) -> UniquePtr<aterm>;
+
+        /// Replace data variables in a PBES expression according to the given
+        /// substitution sigma.
+        ///
+        /// This lives in the PBES library, but is declared here so that both
+        /// substitution functions take the same `assignment_pair`: cxx emits a
+        /// shared struct per bridge module, so declaring it in `src/pbes.rs`
+        /// would force a second Rust type that no `Vec` can be converted to.
+        #[namespace = "mcrl2::pbes_system"]
+        fn mcrl2_pbes_expression_replace_variables(
             input: &_aterm,
             sigma: &Vec<assignment_pair>,
         ) -> UniquePtr<aterm>;

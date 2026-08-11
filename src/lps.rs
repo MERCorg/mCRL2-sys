@@ -105,12 +105,13 @@ pub mod ffi {
             data_spec: &data_specification,
         ) -> UniquePtr<learn_successors_context>;
 
-        /// Assign variables in the context substitution (sigma).
+        /// Assign variables in the context substitution (sigma). Returns an
+        /// error when `variables` and `values` differ in length.
         fn mcrl2_lps_set_assignments(
             context: Pin<&mut learn_successors_context>,
             variables: &[*const _aterm],
             values: &[*const _aterm],
-        );
+        ) -> Result<()>;
 
         /// Rewrites the expression under the context's current substitution
         /// (sigma) and returns the address of the resulting term. Used to
