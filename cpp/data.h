@@ -5,10 +5,9 @@
 
 #include "mcrl2/atermpp/aterm.h"
 #include "mcrl2/atermpp/aterm_string.h"
-#include "mcrl2/atermpp/algorithm.h"
-#include "mcrl2/core/detail/function_symbols.h"
 #include "mcrl2/data/data_expression.h"
 #include "mcrl2/data/data_specification.h"
+#include "mcrl2/data/detail/io.h"
 #include "mcrl2/data/detail/rewrite/jitty.h"
 #include "mcrl2/data/parse.h"
 #include "mcrl2/data/sort_expression.h"
@@ -173,39 +172,38 @@ rust::String mcrl2_sort_expression_to_string(const atermpp::detail::_aterm& inpu
   return data::pp(atermpp::down_cast<data::sort_expression>(tmp));
 }
 
+/// Returns \p components as an aterm_list.
+///
+/// With \p strip_index set, the internal rewriter-only `OpId(name, sort, index)`
+/// function symbols are rewritten into the `OpIdNoIndex(name, sort)` form that
+/// mCRL2 uses in its serialised (binary aterm) representation, so callers
+/// observe exactly the terms that mCRL2 would write to disk. mCRL2 applies that
+/// transformation to a whole data specification while writing it; here it is
+/// applied per list, and only to the three lists that can contain function
+/// symbols. Sorts and aliases consist of sort expressions alone, so stripping
+/// would be a traversal without effect there.
+template <typename Container>
+inline
+std::unique_ptr<atermpp::aterm> mcrl2_data_specification_components(const Container& components, bool strip_index)
+{
+  // These containers are std::vectors, so this selects the linear
+  // make_list_backward overload rather than reversing an input range.
+  atermpp::aterm_list list(components.begin(), components.end());
+  return std::make_unique<atermpp::aterm>(strip_index ? detail::remove_index(list) : atermpp::aterm(list));
+}
+
 /// Returns the user-defined sorts of the data specification as an aterm_list.
 inline
 std::unique_ptr<atermpp::aterm> mcrl2_data_specification_user_defined_sorts(const data_specification& spec)
 {
-  return std::make_unique<atermpp::aterm>(
-      atermpp::aterm_list(spec.user_defined_sorts().begin(), spec.user_defined_sorts().end()));
+  return mcrl2_data_specification_components(spec.user_defined_sorts(), /* strip_index = */ false);
 }
 
 /// Returns the user-defined aliases of the data specification as an aterm_list.
 inline
 std::unique_ptr<atermpp::aterm> mcrl2_data_specification_user_defined_aliases(const data_specification& spec)
 {
-  return std::make_unique<atermpp::aterm>(
-      atermpp::aterm_list(spec.user_defined_aliases().begin(), spec.user_defined_aliases().end()));
-}
-
-/// Rewrites the internal, rewriter-only `OpId(name, sort, index)` function
-/// symbols into the `OpIdNoIndex(name, sort)` form that mCRL2 uses in its
-/// serialised (binary aterm) representation. This mirrors `remove_index_impl`
-/// in `libraries/data/source/data_io.cpp`, so callers observe exactly the
-/// terms that mCRL2 would write to disk.
-inline
-atermpp::aterm mcrl2_remove_function_symbol_index(const atermpp::aterm& x)
-{
-  return atermpp::bottom_up_replace(x,
-      [](const atermpp::aterm& t) -> atermpp::aterm
-      {
-        if (t.function() == core::detail::function_symbol_OpId())
-        {
-          return atermpp::aterm(core::detail::function_symbol_OpIdNoIndex(), t.begin(), --t.end());
-        }
-        return t;
-      });
+  return mcrl2_data_specification_components(spec.user_defined_aliases(), /* strip_index = */ false);
 }
 
 /// Returns the user-defined constructors of the data specification as an
@@ -213,8 +211,7 @@ atermpp::aterm mcrl2_remove_function_symbol_index(const atermpp::aterm& x)
 inline
 std::unique_ptr<atermpp::aterm> mcrl2_data_specification_user_defined_constructors(const data_specification& spec)
 {
-  atermpp::aterm_list list(spec.user_defined_constructors().begin(), spec.user_defined_constructors().end());
-  return std::make_unique<atermpp::aterm>(mcrl2_remove_function_symbol_index(list));
+  return mcrl2_data_specification_components(spec.user_defined_constructors(), /* strip_index = */ true);
 }
 
 /// Returns the user-defined mappings of the data specification as an
@@ -222,8 +219,7 @@ std::unique_ptr<atermpp::aterm> mcrl2_data_specification_user_defined_constructo
 inline
 std::unique_ptr<atermpp::aterm> mcrl2_data_specification_user_defined_mappings(const data_specification& spec)
 {
-  atermpp::aterm_list list(spec.user_defined_mappings().begin(), spec.user_defined_mappings().end());
-  return std::make_unique<atermpp::aterm>(mcrl2_remove_function_symbol_index(list));
+  return mcrl2_data_specification_components(spec.user_defined_mappings(), /* strip_index = */ true);
 }
 
 /// Returns the user-defined equations of the data specification as an
@@ -231,8 +227,7 @@ std::unique_ptr<atermpp::aterm> mcrl2_data_specification_user_defined_mappings(c
 inline
 std::unique_ptr<atermpp::aterm> mcrl2_data_specification_user_defined_equations(const data_specification& spec)
 {
-  atermpp::aterm_list list(spec.user_defined_equations().begin(), spec.user_defined_equations().end());
-  return std::make_unique<atermpp::aterm>(mcrl2_remove_function_symbol_index(list));
+  return mcrl2_data_specification_components(spec.user_defined_equations(), /* strip_index = */ true);
 }
 
 } // namespace mcrl2::data
