@@ -35,7 +35,7 @@ jobs:
 
     - name: Run tests
       if: runner.os != 'Windows'
-      run: cargo build --features cpptrace
+      run: cargo test --features cpptrace
       env:
         RUST_BACKTRACE: full
         RUST_LOG: debug
@@ -43,7 +43,7 @@ jobs:
 
     - name: Run tests (Windows)
       if: runner.os == 'Windows'
-      run: cargo build
+      run: cargo test
       env:
         RUST_BACKTRACE: full
         RUST_LOG: debug
