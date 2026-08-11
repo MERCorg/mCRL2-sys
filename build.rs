@@ -28,11 +28,12 @@ fn main() {
         cargo_emit::rustc_link_lib!("cpptrace" => "static");
 
         // On Linux cpptrace also builds libdwarf (installed next to it), which
-        // in turn may use zstd and zlib from the system.
+        // in turn may use zstd and zlib. These are either built by cpptrace
+        // itself (into `dst`) or taken from the system.
         if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("linux") {
             cargo_emit::rustc_link_lib!("dwarf" => "static");
-            link_system_library("zstd");
-            link_system_library("z");
+            link_compression_library(&dst, "zstd");
+            link_compression_library(&dst, "z");
         }
     }
 
@@ -221,10 +222,40 @@ fn main() {
     rerun_if_changed!(mcrl2_workarounds_path.join("mcrl2_syntax.c").display());
 }
 
-/// Links the given system library, preferring the static version whenever the
-/// platform ships one.
-#[allow(dead_code)] // Only used with the cpptrace feature enabled.
-fn link_system_library(name: &str) {
+/// Links the compression library `name` that libdwarf (built as part of
+/// cpptrace) needs, preferring a static archive over a shared library.
+///
+/// `cpptrace_lib_dir` is the `lib` directory cpptrace installed into; it is
+/// already on the link search path.
+#[cfg(feature = "cpptrace")]
+fn link_compression_library(cpptrace_lib_dir: &Path, name: &str) {
+    // When the system does not provide the library, cpptrace fetches and builds
+    // its own copy and installs it next to libcpptrace.a. Look there first,
+    // since that is the copy libdwarf was actually linked against.
+    if cpptrace_lib_dir.join(format!("lib{name}.a")).exists() {
+        cargo_emit::rustc_link_lib!(name => "static");
+        return;
+    }
+
+    // Path::exists() inspects the host filesystem, which says nothing about the
+    // target when cross-compiling: the archive found there has the host's ABI.
+    // Name the library without a search path instead, so that the link fails
+    // loudly unless the target's library directory was supplied through
+    // RUSTFLAGS, rather than feeding host objects to the cross linker.
+    let host = std::env::var("HOST").expect("cargo should always set this variable");
+    let target = std::env::var("TARGET").expect("cargo should always set this variable");
+    if host != target {
+        cargo_emit::warning!(
+            "Cross-compiling from {} to {}: cannot locate lib{} for the target, so it is linked \
+             from the search path of the target toolchain.",
+            host,
+            target,
+            name
+        );
+        cargo_emit::rustc_link_lib!(name => "static");
+        return;
+    }
+
     let arch =
         std::env::var("CARGO_CFG_TARGET_ARCH").expect("cargo should always set this variable");
     let directories = [
@@ -234,15 +265,27 @@ fn link_system_library(name: &str) {
     ];
 
     for directory in directories {
-        for (filename, kind) in [
-            (format!("lib{name}.a"), "static"),
-            (format!("lib{name}.so"), "dylib"),
-        ] {
-            if directory.join(filename).exists() {
-                cargo_emit::rustc_link_search!(directory.display() => "native");
-                cargo_emit::rustc_link_lib!(name => kind);
-                return;
-            }
+        if directory.join(format!("lib{name}.a")).exists() {
+            // rustc resolves static libraries itself and does not know the
+            // distribution's library directories, so the directory that holds
+            // the archive has to be named. Only the matching directory is added,
+            // since a `rustc-link-search` applies to the whole crate graph.
+            cargo_emit::rustc_link_search!(directory.display() => "native");
+            cargo_emit::rustc_link_lib!(name => "static");
+            return;
+        }
+
+        if directory.join(format!("lib{name}.so")).exists() {
+            // Shared libraries are resolved by the linker driver, which already
+            // searches these directories, so no search path is needed here.
+            cargo_emit::warning!(
+                "Only found a shared lib{0} in {1}, so the resulting binaries depend on lib{0}.so \
+                 at runtime. Install the static lib{0} of this distribution to avoid that.",
+                name,
+                directory.display()
+            );
+            cargo_emit::rustc_link_lib!(name => "dylib");
+            return;
         }
     }
 
@@ -291,30 +334,41 @@ fn add_debug_defines(build: &mut Build) {
 }
 
 /// Add platform specific compile flags and definitions.
-#[allow(unused_variables)]
 fn add_compile_flags(build: &mut Build, mcrl2_path: &Path) {
-    #[cfg(unix)]
-    build
-        .flag_if_supported("-Wno-unused-parameter") // I don't care about unused parameters in mCRL2 code.
-        .flag_if_supported("-pipe")
-        .flag_if_supported("-pedantic");
+    // Which flags the compiler accepts is a property of the target, not of the
+    // host this build script happens to run on, so `#[cfg(windows)]` and
+    // `#[cfg(unix)]` are the wrong question here: they describe the host and
+    // would hand MSVC flags to gcc (and vice versa) when cross-compiling.
+    let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+    let target_env = std::env::var("CARGO_CFG_TARGET_ENV").unwrap_or_default();
 
-    #[cfg(windows)]
-    build
-        .include(mcrl2_path.join("build/workarounds/msvc")) // These are MSVC workarounds that mCRL2 relies on for compilation.
-        .flag_if_supported("/EHsc")
-        .flag_if_supported("/bigobj")
-        .flag_if_supported("/MP")
-        .flag_if_supported("/Zc:inline")
-        .flag_if_supported("/permissive-")
-        .flag_if_supported("/wd4267") // Disable implicit conversion warnings.
-        .define("WIN32", "1")
-        .define("WIN32_LEAN_AND_MEAN", "1")
-        .define("NOMINMAX", "1")
-        .define("_USE_MATH_DEFINES", "1")
-        .define("_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES", "1")
-        .define("_CRT_SECURE_NO_WARNINGS", "1")
-        .define("BOOST_ALL_NO_LIB", "1");
+    if target_os == "windows" {
+        build
+            .define("WIN32", "1")
+            .define("WIN32_LEAN_AND_MEAN", "1")
+            .define("NOMINMAX", "1")
+            .define("_USE_MATH_DEFINES", "1")
+            .define("_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES", "1")
+            .define("_CRT_SECURE_NO_WARNINGS", "1")
+            .define("BOOST_ALL_NO_LIB", "1");
+    }
+
+    if target_env == "msvc" {
+        build
+            .include(mcrl2_path.join("cmake/workarounds/msvc")) // These are the MSVC workarounds (dirent.h, unistd.h and sys/) that mCRL2 relies on for compilation.
+            .flag_if_supported("/EHsc")
+            .flag_if_supported("/bigobj")
+            .flag_if_supported("/MP")
+            .flag_if_supported("/Zc:inline")
+            .flag_if_supported("/permissive-")
+            .flag_if_supported("/wd4267"); // Disable implicit conversion warnings.
+    } else {
+        // gcc/clang style drivers, which includes the MinGW targets.
+        build
+            .flag_if_supported("-Wno-unused-parameter") // I don't care about unused parameters in mCRL2 code.
+            .flag_if_supported("-pipe")
+            .flag_if_supported("-pedantic");
+    }
 }
 
 /// \returns A vector of paths where prefix is prepended to every path in paths.
