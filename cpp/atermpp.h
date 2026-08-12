@@ -131,6 +131,11 @@ inline void mcrl2_aterm_pool_enable_automatic_resize(bool enabled)
   detail::g_term_pool().enable_resize(enabled);
 }
 
+inline bool mcrl2_aterm_pool_resize_is_needed()
+{
+  return detail::g_thread_term_pool().resize_is_needed();
+}
+
 inline void mcrl2_aterm_pool_resize()
 {
   detail::g_thread_term_pool().resize();

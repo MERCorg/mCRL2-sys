@@ -68,6 +68,11 @@ pub mod ffi {
         /// quiescent point instead.
         fn mcrl2_aterm_pool_enable_automatic_resize(enabled: bool);
 
+        /// Returns true iff one of the global aterm pool hash tables has to be
+        /// resized. Only takes a shared lock, so unlike `mcrl2_aterm_pool_resize`
+        /// it does not suspend the other threads and can be used to guard it.
+        fn mcrl2_aterm_pool_resize_is_needed() -> bool;
+
         /// Resize the global aterm pool hash tables when needed. Must be called
         /// while the calling thread is not inside a shared section.
         fn mcrl2_aterm_pool_resize();
