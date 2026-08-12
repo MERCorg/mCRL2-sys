@@ -116,7 +116,14 @@ inline std::size_t mcrl2_aterm_pool_capacity()
 
 inline void mcrl2_aterm_pool_collect_garbage()
 {
+  // aterm_pool::collect_impl() ignores every collection while garbage collection
+  // is disabled, including the explicit ones requested here. Since it is disabled
+  // to keep the pool from collecting on its own from inside a shared section,
+  // enable it for the duration of this externally scheduled collection and
+  // disable it again afterwards.
+  detail::g_term_pool().enable_garbage_collection(true);
   detail::g_thread_term_pool().collect();
+  detail::g_term_pool().enable_garbage_collection(false);
 }
 
 inline void mcrl2_aterm_pool_enable_automatic_resize(bool enabled)
