@@ -27,10 +27,12 @@ fn main() {
         // Link the required libraries for cpptrace (Can this be derived from the cmake somehow?)
         cargo_emit::rustc_link_lib!("cpptrace" => "static");
 
-        // On Linux cpptrace also builds libdwarf (installed next to it), which
-        // in turn may use zstd and zlib. These are either built by cpptrace
-        // itself (into `dst`) or taken from the system.
-        if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("linux") {
+        // cpptrace resolves symbols through libdwarf on every Unix target, so on
+        // macOS just as much as on Linux, and on MinGW as well; only MSVC uses
+        // dbghelp instead. cpptrace builds libdwarf itself and installs it next
+        // to libcpptrace.a, and libdwarf in turn uses zstd and zlib. Those are
+        // either built by cpptrace as well (into `dst`) or taken from the system.
+        if std::env::var("CARGO_CFG_TARGET_ENV").as_deref() != Ok("msvc") {
             cargo_emit::rustc_link_lib!("dwarf" => "static");
             link_compression_library(&dst, "zstd");
             link_compression_library(&dst, "z");
@@ -253,6 +255,17 @@ fn link_compression_library(cpptrace_lib_dir: &Path, name: &str) {
             name
         );
         cargo_emit::rustc_link_lib!(name => "static");
+        return;
+    }
+
+    // The directories searched below are where a Linux distribution keeps its
+    // archives. On other targets the library belongs to the platform SDK
+    // instead, where it exists as a shared library only (macOS, for instance,
+    // ships zlib but no static libz), and the linker driver already searches
+    // those locations. Naming the library without a search path leaves that
+    // lookup to the driver.
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("linux") {
+        cargo_emit::rustc_link_lib!(name => "dylib");
         return;
     }
 
