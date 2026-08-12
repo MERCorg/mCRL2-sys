@@ -224,6 +224,27 @@ pub mod ffi {
             reset: bool,
         ) -> Result<()>;
 
+        /// Substitutes a value for every global variable of the PBES.
+        ///
+        /// The first of the four steps that mCRL2's `pbesinst_lazy_algorithm`
+        /// applies before instantiating a PBES; the caller composes them.
+        ///
+        /// Returns an error when a global variable cannot be instantiated.
+        fn mcrl2_pbes_instantiate_global_variables(input: Pin<&mut pbes>) -> Result<()>;
+
+        /// Simplifies every equation body, evaluating data subterms and
+        /// eliminating quantifiers that range over nothing.
+        fn mcrl2_pbes_simplify_quantifiers(input: Pin<&mut pbes>) -> Result<()>;
+
+        /// Applies the one point rule to every equation body, replacing a
+        /// quantifier that pins its variable to a single value by that instance.
+        fn mcrl2_pbes_one_point_rule(input: Pin<&mut pbes>) -> Result<()>;
+
+        /// Orders the quantified variables of every equation body, so that
+        /// quantifiers differing only in the order of their variables become
+        /// the same term.
+        fn mcrl2_pbes_order_quantified_variables(input: Pin<&mut pbes>) -> Result<()>;
+
         /// Returns the summands of the given srf_equation.
         fn mcrl2_srf_equations_summands(
             result: Pin<&mut CxxVector<srf_summand>>,

@@ -8,13 +8,17 @@
 #include "mcrl2/data/rewriter.h"
 #include "mcrl2/data/substitution_utility.h"
 #include "mcrl2/data/substitutions/mutable_indexed_substitution.h"
+#include "mcrl2/pbes/detail/instantiate_global_variables.h"
 #include "mcrl2/pbes/detail/stategraph_local_algorithm.h"
 #include "mcrl2/pbes/detail/stategraph_pbes.h"
 #include "mcrl2/pbes/io.h"
 #include "mcrl2/pbes/pbes.h"
 #include "mcrl2/pbes/propositional_variable.h"
 #include "mcrl2/pbes/rewriters/enumerate_quantifiers_rewriter.h"
+#include "mcrl2/pbes/rewriters/one_point_rule_rewriter.h"
+#include "mcrl2/pbes/rewriters/simplify_quantifiers_rewriter.h"
 #include "mcrl2/pbes/srf_pbes.h"
+#include "mcrl2/pbes/transformations.h"
 #include "mcrl2/pbes/unify_parameters.h"
 #include "mcrl2/utilities/exception.h"
 
@@ -346,6 +350,67 @@ inline
 void mcrl2_pbes_unify_parameters(pbes& p, bool ignore_ce_equations, bool reset)
 {
   unify_parameters(p, ignore_ce_equations, reset);
+}
+
+// The individual steps that `pbesinst_lazy_algorithm::preprocess` applies to a
+// PBES before instantiating it. They are exposed separately so that the caller
+// composes (and reports) them itself; applying all four in the order below is
+// what mCRL2 does.
+//
+// Each of the three body rewrites is a pure map over the equation bodies, so
+// running them as three passes over all equations gives the same result as
+// mCRL2's single pass that applies all three per equation.
+//
+// Note that `replace_constants_by_variables` is deliberately absent: mCRL2
+// applies it in `pbesinst_lazy_algorithm::run` rather than in `preprocess`,
+// because it lifts closed subterms into a substitution that the instantiating
+// rewriter has to be primed with, so it cannot be applied to a PBES on its own.
+
+/// Substitutes a value for every global variable of the PBES.
+///
+/// Throws when a global variable cannot be instantiated.
+inline
+void mcrl2_pbes_instantiate_global_variables(pbes& p)
+{
+  detail::instantiate_global_variables(p);
+}
+
+/// Simplifies every equation body, evaluating data subterms and eliminating
+/// quantifiers that range over nothing.
+inline
+void mcrl2_pbes_simplify_quantifiers(pbes& p)
+{
+  data::rewriter datar(p.data());
+  simplify_quantifiers_data_rewriter<data::rewriter> simplify(datar);
+
+  for (pbes_equation& eqn : p.equations())
+  {
+    eqn.formula() = simplify(eqn.formula());
+  }
+}
+
+/// Applies the one point rule to every equation body, replacing a quantifier
+/// that pins its variable to a single value by that instance.
+inline
+void mcrl2_pbes_one_point_rule(pbes& p)
+{
+  one_point_rule_rewriter one_point;
+
+  for (pbes_equation& eqn : p.equations())
+  {
+    eqn.formula() = one_point(eqn.formula());
+  }
+}
+
+/// Orders the quantified variables of every equation body, so that quantifiers
+/// differing only in the order of their variables become the same term.
+inline
+void mcrl2_pbes_order_quantified_variables(pbes& p)
+{
+  for (pbes_equation& eqn : p.equations())
+  {
+    eqn.formula() = order_quantified_variables(eqn.formula(), p.data());
+  }
 }
 
 // mcrl2::pbes_system::detail::predicate_variable
