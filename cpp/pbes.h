@@ -402,8 +402,9 @@ void mcrl2_pbes_one_point_rule(pbes& p)
   }
 }
 
-/// Orders the quantified variables of every equation body, so that quantifiers
-/// differing only in the order of their variables become the same term.
+/// Orders the quantified variables of every equation body to optimise
+/// enumeration. Variables of an enumerated sort are moved ahead of the
+/// rest, ordered by decreasing number of constructors.
 inline
 void mcrl2_pbes_order_quantified_variables(pbes& p)
 {

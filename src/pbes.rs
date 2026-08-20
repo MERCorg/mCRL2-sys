@@ -240,9 +240,9 @@ pub mod ffi {
         /// quantifier that pins its variable to a single value by that instance.
         fn mcrl2_pbes_one_point_rule(input: Pin<&mut pbes>) -> Result<()>;
 
-        /// Orders the quantified variables of every equation body, so that
-        /// quantifiers differing only in the order of their variables become
-        /// the same term.
+        /// Orders the quantified variables of every equation body to optimise
+        /// enumeration. Variables of an enumerated sort are moved ahead of the
+        /// rest, ordered by decreasing number of constructors.
         fn mcrl2_pbes_order_quantified_variables(input: Pin<&mut pbes>) -> Result<()>;
 
         /// Returns the summands of the given srf_equation.
