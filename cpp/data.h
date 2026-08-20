@@ -151,6 +151,14 @@ bool mcrl2_data_expression_is_data_expression(const atermpp::detail::_aterm& inp
   return data::is_data_expression(atermpp::down_cast<atermpp::aterm>(tmp));
 }
 
+/// Recursively strips the internal rewriter-only `OpId(name, sort, index)` markers from \p input.
+inline
+std::unique_ptr<atermpp::aterm> mcrl2_data_expression_remove_index(const atermpp::detail::_aterm& input)
+{
+  atermpp::unprotected_aterm_core tmp(&input);
+  return std::make_unique<atermpp::aterm>(detail::remove_index(atermpp::down_cast<atermpp::aterm>(tmp)));
+}
+
 inline
 bool mcrl2_is_data_sort_expression(const atermpp::detail::_aterm& input)
 {

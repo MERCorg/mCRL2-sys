@@ -75,6 +75,10 @@ pub mod ffi {
         fn mcrl2_data_expression_is_untyped_identifier(input: &_aterm) -> bool;
         fn mcrl2_data_expression_is_data_expression(input: &_aterm) -> bool;
 
+        /// Recursively strips the internal rewriter-only `OpId(name, sort, index)` markers from a
+        /// term.
+        fn mcrl2_data_expression_remove_index(input: &_aterm) -> UniquePtr<aterm>;
+
         fn mcrl2_is_data_sort_expression(input: &_aterm) -> bool;
 
         fn mcrl2_data_expression_to_string(input: &_aterm) -> String;

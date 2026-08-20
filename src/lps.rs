@@ -105,6 +105,9 @@ pub mod ffi {
             data_spec: &data_specification,
         ) -> UniquePtr<learn_successors_context>;
 
+        /// Returns a copy of the data specification of the given LPS.
+        fn mcrl2_lps_data_specification(lps: &stochastic_specification) -> UniquePtr<data_specification>;
+
         /// Assign variables in the context substitution (sigma). Returns an
         /// error when `variables` and `values` differ in length.
         fn mcrl2_lps_set_assignments(

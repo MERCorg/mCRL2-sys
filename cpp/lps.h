@@ -158,6 +158,12 @@ inline const atermpp::detail::_aterm *mcrl2_lps_process_initializer_expressions(
   return atermpp::detail::address(init.expressions());
 }
 
+/// \brief Returns a copy of the data specification of the given LPS.
+inline std::unique_ptr<data::data_specification>
+mcrl2_lps_data_specification(const stochastic_specification &spec) {
+  return std::make_unique<data::data_specification>(spec.data());
+}
+
 struct learn_successors_context {
   // Owned copy of the data specification. enumerator_algorithm stores a const
   // reference to the data spec (m_dataspec in enumerator.h), so this member
