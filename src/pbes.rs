@@ -208,6 +208,8 @@ pub mod ffi {
         /// Convert a SRF PBES to a PBES.
         fn mcrl2_srf_pbes_to_pbes(input: &srf_pbes) -> UniquePtr<pbes>;
 
+        fn mcrl2_srf_pbes_data_specification(input: &srf_pbes) -> UniquePtr<data_specification>;
+
         /// Unify all parameters of the equations, optionally ignoring the equations
         /// related to counter example information. Finally, if reset is true, reset the
         /// newly introduced parameters to a default value.

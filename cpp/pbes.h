@@ -138,6 +138,12 @@ std::unique_ptr<data::data_specification> mcrl2_pbes_data_specification(const pb
 }
 
 inline
+std::unique_ptr<data::data_specification> mcrl2_srf_pbes_data_specification(const srf_pbes& pbesspec)
+{
+  return std::make_unique<data::data_specification>(pbesspec.data());
+}
+
+inline
 void mcrl2_pbes_normalize(pbes& pbesspec)
 {
   algorithms::normalize(pbesspec);
