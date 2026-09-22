@@ -235,7 +235,7 @@ public:
         i != m_local_control_flow_graphs.end();
         ++i)
     {
-      mCRL2log(log::verbose) << "--- computed local control flow graph " << (i - m_local_control_flow_graphs.begin())
+      mCRL2log(log::log_level_t::verbose) << "--- computed local control flow graph " << (i - m_local_control_flow_graphs.begin())
                              << " --- \n"
                              << *i << std::endl;
     }
