@@ -94,5 +94,18 @@ pub mod ffi {
         fn mcrl2_data_specification_user_defined_mappings(spec: &data_specification) -> UniquePtr<aterm>;
         /// Returns the user-defined equations of the data specification as an aterm_list.
         fn mcrl2_data_specification_user_defined_equations(spec: &data_specification) -> UniquePtr<aterm>;
+
+        /// Parses and type checks a variable declaration list (e.g. `"w: Nat; v: Bool;"`)
+        /// against `spec`, returning the parsed variables as a variable_list aterm.
+        fn mcrl2_data_parse_variables(text: &str, spec: &data_specification) -> Result<UniquePtr<aterm>>;
+
+        /// Parses and type checks a data expression against `spec`, with
+        /// `variables` in scope, returning the parsed expression as a
+        /// data_expression aterm.
+        fn mcrl2_data_parse_data_expression(
+            text: &str,
+            variables: &_aterm,
+            spec: &data_specification,
+        ) -> Result<UniquePtr<aterm>>;
     }
 }

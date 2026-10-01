@@ -63,6 +63,11 @@ pub mod ffi {
             lps: &stochastic_specification,
         ) -> Result<UniquePtr<stochastic_process_initializer>>;
 
+        /// Returns a copy of the LPS's data specification.
+        fn mcrl2_lps_data_specification(
+            spec: &stochastic_specification,
+        ) -> UniquePtr<data_specification>;
+
         /// Pretty-prints a multi-action term using the mCRL2 pretty printer.
         fn mcrl2_lps_multi_action_to_string(input: &_aterm) -> String;
 
@@ -104,9 +109,6 @@ pub mod ffi {
         fn mcrl2_lps_create_learn_successors_context_from_data_spec(
             data_spec: &data_specification,
         ) -> UniquePtr<learn_successors_context>;
-
-        /// Returns a copy of the data specification of the given LPS.
-        fn mcrl2_lps_data_specification(lps: &stochastic_specification) -> UniquePtr<data_specification>;
 
         /// Assign variables in the context substitution (sigma). Returns an
         /// error when `variables` and `values` differ in length.

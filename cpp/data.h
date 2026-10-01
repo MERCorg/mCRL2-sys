@@ -238,6 +238,23 @@ std::unique_ptr<atermpp::aterm> mcrl2_data_specification_user_defined_equations(
   return mcrl2_data_specification_components(spec.user_defined_equations(), /* strip_index = */ true);
 }
 
+/// Parses and type checks a variable declaration list (e.g. `"w: Nat; v: Bool;"`)
+/// against \p spec, returning the parsed variables as a variable_list aterm.
+///
+/// Declared non-inline since parsing/type checking can throw on malformed
+/// input; the Rust binding surfaces that as a `Result::Err` rather than an
+/// abort (see data.cpp and src/data.rs).
+std::unique_ptr<atermpp::aterm> mcrl2_data_parse_variables(rust::Str text, const data_specification& spec);
+
+/// Parses and type checks a data expression (e.g. a partition rule's guard)
+/// against \p spec, with \p variables (a variable_list aterm, typically the
+/// result of mcrl2_data_parse_variables) in scope, returning the parsed
+/// expression as a data_expression aterm.
+///
+/// Declared non-inline for the same reason as mcrl2_data_parse_variables.
+std::unique_ptr<atermpp::aterm> mcrl2_data_parse_data_expression(
+    rust::Str text, const atermpp::detail::_aterm& variables, const data_specification& spec);
+
 } // namespace mcrl2::data
 
 #endif // MCRL2_SYS_CPP_DATA_H

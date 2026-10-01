@@ -110,6 +110,12 @@ mcrl2_lps_process_initializer(const stochastic_specification &spec) {
       spec.initial_process());
 }
 
+/// \brief Returns a copy of the LPS's data specification.
+inline std::unique_ptr<data::data_specification>
+mcrl2_lps_data_specification(const stochastic_specification &spec) {
+  return std::make_unique<data::data_specification>(spec.data());
+}
+
 /// \brief Pretty-prints a multi-action term using the mCRL2 pretty printer.
 inline rust::String
 mcrl2_lps_multi_action_to_string(const atermpp::detail::_aterm &input) {
@@ -156,12 +162,6 @@ mcrl2_lps_process_parameters(const stochastic_specification &spec) {
 inline const atermpp::detail::_aterm *mcrl2_lps_process_initializer_expressions(
     const stochastic_process_initializer &init) {
   return atermpp::detail::address(init.expressions());
-}
-
-/// \brief Returns a copy of the data specification of the given LPS.
-inline std::unique_ptr<data::data_specification>
-mcrl2_lps_data_specification(const stochastic_specification &spec) {
-  return std::make_unique<data::data_specification>(spec.data());
 }
 
 struct learn_successors_context {

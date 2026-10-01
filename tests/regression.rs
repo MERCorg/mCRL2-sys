@@ -39,6 +39,8 @@ use mcrl2_sys::data::ffi::assignment_pair;
 use mcrl2_sys::data::ffi::mcrl2_create_rewriter_jitty;
 use mcrl2_sys::data::ffi::mcrl2_data_expression_remove_index;
 use mcrl2_sys::data::ffi::mcrl2_data_expression_replace_variables;
+use mcrl2_sys::data::ffi::mcrl2_data_parse_data_expression;
+use mcrl2_sys::data::ffi::mcrl2_data_parse_variables;
 use mcrl2_sys::data::ffi::mcrl2_data_specification_from_string;
 use mcrl2_sys::data::ffi::mcrl2_data_specification_user_defined_aliases;
 use mcrl2_sys::data::ffi::mcrl2_data_specification_user_defined_constructors;
@@ -450,6 +452,96 @@ fn data_specification_accessors_strip_the_function_symbol_index() {
         "[SortRef(SortId(D),SortStruct([StructCons(a,[],),StructCons(b,[],)])),\
 SortRef(SortId(A),SortId(Nat))]"
     );
+}
+
+/// Writes `text` to a fresh file under the system temp directory and returns
+/// its path, for `mcrl2_lps_load_from_text_file`, which (unlike the PBES
+/// loader) only reads from a path rather than a string.
+fn write_mcrl2_spec(name: &str, text: &str) -> std::path::PathBuf {
+    let path = std::env::temp_dir().join(format!("mcrl2-sys-regression-{name}-{}.mcrl2", std::process::id()));
+    std::fs::write(&path, text).expect("writing the temporary spec should succeed");
+    path
+}
+
+/// `mcrl2_lps_data_specification` must return the LPS's *own* data
+/// specification (its user-declared sort `D`), not some default/empty one.
+#[test]
+fn lps_data_specification_exposes_the_lps_own_sorts() {
+    let _guard = lock_pool();
+
+    let path = write_mcrl2_spec(
+        "lps-data-spec",
+        "sort D = struct a | b;
+         act x: D;
+         proc P = x(a) . P;
+         init P;
+        ",
+    );
+    let lps = mcrl2_lps_load_from_text_file(path.to_str().unwrap()).expect("the test LPS should parse");
+
+    let spec = mcrl2_lps_data_specification(&lps);
+    // `sort D = struct a | b` is a struct alias rather than a plain sort (as
+    // `data_specification_accessors_strip_the_function_symbol_index` above
+    // also shows), so it surfaces under the aliases accessor.
+    let aliases = print(mcrl2_aterm_get_address(&mcrl2_data_specification_user_defined_aliases(&spec)));
+    assert!(
+        aliases.contains("SortRef(SortId(D)"),
+        "the LPS's own sort D should be visible: {aliases}"
+    );
+
+    let _ = std::fs::remove_file(&path);
+}
+
+/// A variable declaration list is parsed and type checked against the given
+/// data specification, with results ordered the way they appear in the input
+/// (not reversed by the aterm_list construction).
+#[test]
+fn data_parse_variables_type_checks_and_preserves_order() {
+    let _guard = lock_pool();
+
+    let spec = mcrl2_data_specification_from_string("sort D = struct a | b;\n");
+
+    let variables = mcrl2_data_parse_variables("w: D; n: Nat;", &spec).expect("w: D; n: Nat; should type check");
+    let printed = print(mcrl2_aterm_get_address(&variables));
+    assert_eq!(
+        printed,
+        "[DataVarId(w,SortId(D)),DataVarId(n,SortId(Nat))]",
+        "variables should type check and keep their declared order: {printed}"
+    );
+
+    // An undeclared sort must be rejected, not silently accepted.
+    let error = expect_error(
+        mcrl2_data_parse_variables("w: Bogus;", &spec),
+        "an unknown sort must be rejected",
+    );
+    assert!(!error.what().is_empty(), "the error should carry a message");
+}
+
+/// A data expression is parsed and type checked with the given variables in
+/// scope; a variable not in that list is correctly reported as unbound.
+#[test]
+fn data_parse_data_expression_uses_the_given_variables_as_scope() {
+    let _guard = lock_pool();
+
+    let spec = mcrl2_data_specification_from_string("");
+    let variables = mcrl2_data_parse_variables("w: Nat;", &spec).expect("w: Nat; should type check");
+
+    let expr = mcrl2_data_parse_data_expression("w + 1", unsafe { &*mcrl2_aterm_get_address(&variables) }, &spec)
+        .expect("w + 1 should type check with w in scope");
+    let printed = print(mcrl2_aterm_get_address(&expr));
+    assert!(
+        printed.contains("DataVarId(w,SortId(Nat))"),
+        "the parsed expression should reference the in-scope variable w: {printed}"
+    );
+
+    // Without `w` in scope, the same text is an unbound-variable error, not a
+    // silent fallback to some default binding.
+    let other_scope = mcrl2_data_parse_variables("m: Nat;", &spec).expect("m: Nat; should type check");
+    let error = expect_error(
+        mcrl2_data_parse_data_expression("w + 1", unsafe { &*mcrl2_aterm_get_address(&other_scope) }, &spec),
+        "w is not in scope and must be rejected",
+    );
+    assert!(!error.what().is_empty(), "the error should carry a message");
 }
 
 #[test]
