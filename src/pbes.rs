@@ -219,6 +219,11 @@ pub mod ffi {
             reset: bool,
         ) -> Result<()>;
 
+        /// Renames the summation variables of every summand that clash with the
+        /// parameters of the first equation. Requires that the parameters have been
+        /// unified, see `mcrl2_srf_pbes_unify_parameters`.
+        fn mcrl2_srf_pbes_resolve_summand_variable_name_clashes(input: Pin<&mut srf_pbes>) -> Result<()>;
+
         /// Directly unify all parameters of a pbes without converting to SRF first.
         fn mcrl2_pbes_unify_parameters(
             input: Pin<&mut pbes>,

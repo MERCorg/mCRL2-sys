@@ -14,6 +14,7 @@
 #include "mcrl2/pbes/io.h"
 #include "mcrl2/pbes/pbes.h"
 #include "mcrl2/pbes/propositional_variable.h"
+#include "mcrl2/pbes/resolve_name_clashes.h"
 #include "mcrl2/pbes/rewriters/enumerate_quantifiers_rewriter.h"
 #include "mcrl2/pbes/rewriters/one_point_rule_rewriter.h"
 #include "mcrl2/pbes/rewriters/simplify_quantifiers_rewriter.h"
@@ -350,6 +351,15 @@ inline
 void mcrl2_srf_pbes_unify_parameters(srf_pbes& p, bool ignore_ce_equations, bool reset)
 {
   unify_parameters(p, ignore_ce_equations, reset);
+}
+
+inline
+void mcrl2_srf_pbes_resolve_summand_variable_name_clashes(srf_pbes& p)
+{
+  if (!p.equations().empty())
+  {
+    resolve_summand_variable_name_clashes(p, p.equations().front().variable().parameters());
+  }
 }
 
 inline
