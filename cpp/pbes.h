@@ -9,6 +9,7 @@
 #include "mcrl2/data/substitution_utility.h"
 #include "mcrl2/data/substitutions/mutable_indexed_substitution.h"
 #include "mcrl2/pbes/detail/instantiate_global_variables.h"
+#include "mcrl2/pbes/detail/pbes_remove_counterexample_info.h"
 #include "mcrl2/pbes/detail/stategraph_local_algorithm.h"
 #include "mcrl2/pbes/detail/stategraph_pbes.h"
 #include "mcrl2/pbes/io.h"
@@ -366,6 +367,21 @@ inline
 void mcrl2_pbes_unify_parameters(pbes& p, bool ignore_ce_equations, bool reset)
 {
   unify_parameters(p, ignore_ce_equations, reset);
+}
+
+/// Returns true iff the PBES contains counter-example equations (`Zpos_*`/`Zneg_*`).
+inline
+bool mcrl2_pbes_has_counter_example_information(const pbes& p)
+{
+  return detail::has_counter_example_information(p);
+}
+
+/// Removes all counter-example equations in-place, replacing instantiations of
+/// `Zpos_*` variables by true and of `Zneg_*` variables by false.
+inline
+void mcrl2_pbes_remove_counterexample_info(pbes& p)
+{
+  p = detail::remove_counterexample_info(p);
 }
 
 // The individual steps that `pbesinst_lazy_algorithm::preprocess` applies to a

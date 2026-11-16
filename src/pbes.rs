@@ -231,6 +231,15 @@ pub mod ffi {
             reset: bool,
         ) -> Result<()>;
 
+        /// Returns true iff the PBES contains counter-example equations, i.e.
+        /// equations for variables named `Zpos_*` or `Zneg_*`.
+        fn mcrl2_pbes_has_counter_example_information(input: &pbes) -> bool;
+
+        /// Removes all counter-example equations in-place. Instantiations of a
+        /// `Zpos_*` variable become true and of a `Zneg_*` variable false, which
+        /// preserves the solution of the remaining equations.
+        fn mcrl2_pbes_remove_counterexample_info(input: Pin<&mut pbes>) -> Result<()>;
+
         /// Substitutes a value for every global variable of the PBES.
         ///
         /// The first of the four steps that mCRL2's `pbesinst_lazy_algorithm`
